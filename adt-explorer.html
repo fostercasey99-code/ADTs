@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADT Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0e11; --bg2: #13151a; --bg3: #1c1f27;
+  --border: rgba(255,255,255,0.07); --border-hi: rgba(255,255,255,0.14);
+  --text: #e8e6df; --text2: #888785; --text3: #454340;
+  --blue: #4f8ef7; --teal: #3ec9a0; --amber: #f0a030;
+  --coral: #f06050; --purple: #9f7ef7; --green: #5ec460;
+  --pink: #f07ab0; --yellow: #e8d050;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'Lora', serif;
+  --font-mono: 'DM Mono', monospace;
+  --r: 12px; --r-sm: 7px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
+
+/* ── HEADER ── */
+.hdr { padding: 28px 40px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; gap: 16px; }
+.hdr h1 { font-family: var(--font-head); font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
+.hdr p { font-size: 13px; color: var(--text2); font-style: italic; }
+
+/* ── LAYOUT ── */
+.layout { display: flex; min-height: calc(100vh - 69px); }
+.sidebar { width: 190px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 20px 0; position: sticky; top: 0; height: calc(100vh - 69px); overflow-y: auto; }
+.sidebar-lbl { font-family: var(--font-mono); font-size: 10px; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; padding: 0 18px 10px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 18px; cursor: pointer; font-size: 13px; color: var(--text2); border-left: 2px solid transparent; transition: all .15s; user-select: none; font-family: var(--font-head); font-weight: 500; }
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--text); border-left-color: var(--accent, #4f8ef7); background: rgba(255,255,255,0.04); }
+.nav-icon { font-size: 16px; width: 22px; text-align: center; }
+.main { flex: 1; padding: 36px 44px; max-width: 860px; }
+.panel { display: none; } .panel.active { display: block; }
+
+/* ── PANEL HEADER ── */
+.ph { margin-bottom: 24px; }
+.ph-row { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+.ph-title { font-family: var(--font-head); font-size: 30px; font-weight: 800; }
+.ph-badge { font-family: var(--font-mono); font-size: 10px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border-hi); color: var(--text2); }
+.ph-desc { font-size: 14px; color: var(--text2); line-height: 1.75; max-width: 580px; }
+.ph-under { font-family: var(--font-mono); font-size: 11px; color: var(--text3); margin-top: 6px; }
+.ph-under span { color: var(--text2); }
+
+/* ── CONTROLS ── */
+.ctrls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.ci { width: 64px; font-size: 13px; font-family: var(--font-mono); padding: 6px 9px; border: 1px solid var(--border-hi); border-radius: var(--r-sm); background: var(--bg3); color: var(--text); outline: none; }
+.ci:focus { border-color: var(--blue); }
+.clbl { font-family: var(--font-mono); font-size: 11px; color: var(--text3); }
+.cb { font-size: 12px; font-family: var(--font-head); font-weight: 600; padding: 6px 15px; border: 1px solid var(--border-hi); border-radius: var(--r-sm); background: var(--bg3); color: var(--text); cursor: pointer; transition: all .15s; }
+.cb:hover { background: rgba(255,255,255,0.07); }
+.cb.p { background: rgba(79,142,247,0.14); border-color: rgba(79,142,247,0.35); color: #a8c8ff; }
+.cb.p:hover { background: rgba(79,142,247,0.24); }
+.cb:active { transform: scale(.97); }
+.csep { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+
+/* ── SCENE ── */
+.scene { border: 1px solid var(--border); border-radius: var(--r); background: var(--bg2); overflow-x: auto; overflow-y: hidden; margin-bottom: 12px; cursor: grab; }
+#pq-scene { overflow-y: auto; overflow-x: auto; max-height: 360px; }
+#stack-scene { overflow-y: auto; overflow-x: hidden; max-height: 380px; }
+#pq-scene::-webkit-scrollbar { width: 5px; height: 5px; }
+#pq-scene::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+.scene canvas { min-width: 100%; display: block; }
+.scene::-webkit-scrollbar { height: 5px; }
+.scene::-webkit-scrollbar-track { background: var(--bg3); border-radius: 3px; }
+.scene::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+canvas { display: block; width: 100%; }
+.log { font-family: var(--font-mono); font-size: 12px; color: var(--text3); padding: 7px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r-sm); min-height: 22px; transition: color .2s; }
+.log.hi { color: var(--amber); }
+.callout { font-size: 13px; color: var(--text2); background: rgba(79,142,247,0.05); border: 1px solid rgba(79,142,247,0.14); border-left: 3px solid var(--blue); border-radius: var(--r-sm); padding: 10px 14px; margin-top: 14px; line-height: 1.65; }
+.callout strong { color: var(--text); font-weight: 600; }
+.code-block { margin-top: 14px; border-radius: var(--r-sm); overflow: hidden; border: 1px solid var(--border-hi); }
+.code-header { display: flex; align-items: center; justify-content: space-between; padding: 7px 14px; background: rgba(255,255,255,.04); border-bottom: 1px solid var(--border); }
+.code-header span { font-family: var(--font-mono); font-size: 10px; color: var(--text3); letter-spacing: .06em; text-transform: uppercase; }
+.code-copy { font-family: var(--font-mono); font-size: 10px; padding: 2px 8px; border: 1px solid var(--border-hi); border-radius: 4px; background: transparent; color: var(--text3); cursor: pointer; transition: all .15s; }
+.code-copy:hover { color: var(--text); border-color: var(--text2); }
+pre.code-pre { margin: 0; padding: 14px 16px; background: var(--bg3); font-family: var(--font-mono); font-size: 12px; line-height: 1.7; overflow-x: auto; white-space: pre; }
+.tok-kw  { color: #c4adff; }
+.tok-fn  { color: #7de8c8; }
+.tok-str { color: #ffc860; }
+.tok-num { color: #a8c8ff; }
+.tok-cmt { color: #454340; font-style: italic; }
+.tok-var { color: #e8e6df; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+</style>
+</head>
+<body>
+<header class="hdr">
+  <h1>Abstract Data Types</h1>
+
+</header>
+<div class="layout">
+  <nav class="sidebar"><div class="sidebar-lbl">ADTs</div><div id="nav"></div></nav>
+  <main class="main" id="panels"></main>
+</div>
+
+<script>
+const DPR = window.devicePixelRatio||1;
+function mkCanvas(id, h, minW=0){
+  const c=document.getElementById(id); if(!c)return null;
+  const W=Math.max(c.parentElement.clientWidth, minW);
+  c.width=Math.round(W*DPR); c.height=Math.round(h*DPR);
+  c.style.width=W+'px'; c.style.height=h+'px';
+  const ctx=c.getContext('2d');
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.translate(.5,.5);
+  return{c,ctx,W,H:h};
+}
+function rr(ctx,x,y,w,h,r=8){
+  x=Math.round(x);y=Math.round(y);w=Math.round(w);h=Math.round(h);
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);
+  ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
+}
+function box(ctx,x,y,w,h,fill,stroke,text,textColor='#e8e6df',r=8,lw=.8){
+  ctx.save();rr(ctx,x,y,w,h,r);ctx.fillStyle=fill;ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.fill();ctx.stroke();
+  if(text!==null&&text!==undefined){
+    ctx.fillStyle=textColor;ctx.font='500 12px "DM Mono",monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(String(text),Math.round(x+w/2),Math.round(y+h/2));
+  }
+  ctx.restore();
+}
+function txt(ctx,x,y,t,size=11,color='#454340',align='center',style=''){
+  ctx.save();ctx.font=`${style}${size}px "DM Mono",monospace`;ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='middle';
+  ctx.fillText(String(t),Math.round(x),Math.round(y));ctx.restore();
+}
+function arw(ctx,x1,y1,x2,y2,color,sz=7){
+  ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=1;
+  const a=Math.atan2(y2-y1,x2-x1);
+  ctx.beginPath();ctx.moveTo(Math.round(x1),Math.round(y1));ctx.lineTo(Math.round(x2),Math.round(y2));ctx.stroke();
+  ctx.beginPath();ctx.moveTo(Math.round(x2),Math.round(y2));
+  ctx.lineTo(Math.round(x2-sz*Math.cos(a-.4)),Math.round(y2-sz*Math.sin(a-.4)));
+  ctx.lineTo(Math.round(x2-sz*Math.cos(a+.4)),Math.round(y2-sz*Math.sin(a+.4)));
+  ctx.closePath();ctx.fill();ctx.restore();
+}
+function setLog(id,t,hi=false){const e=document.getElementById(id);if(!e)return;e.textContent=t;e.classList.toggle('hi',hi);}
+function lerp(a,b,t){return a+(b-a)*t;}
+function easeOut(t){return 1-Math.pow(1-t,3);}
+
+/* ════════════════════════════════
+   LIST
+════════════════════════════════ */
+let listData=[3,7,1,9,4];let listAnim=null;
+function listGetX(count,i,W){const bw=54,gap=8,total=count*(bw+gap)-gap;return(W-total)/2+i*(bw+gap);}
+function listDraw(data,hiIdxs=[]){
+  const minW=Math.max(500, data.length*(54+8)-8+80);
+  const s=mkCanvas('list-c',150,minW);if(!s)return;
+  const{ctx,W,H}=s;ctx.clearRect(-1,-1,W+2,H+2);
+  const bw=54,bh=48,sy=42;
+  txt(ctx,W/2,18,'ordered — each item has an index',11,'#454340');
+  data.forEach((v,i)=>{
+    const x=listGetX(data.length,i,W),hi=hiIdxs.includes(i);
+    box(ctx,x,sy,bw,bh,hi?'rgba(240,160,48,.22)':'rgba(79,142,247,.13)',hi?'rgba(240,160,48,.7)':'rgba(79,142,247,.5)',v,hi?'#ffc860':'#a8c8ff');
+    txt(ctx,x+bw/2,sy+bh+15,String(i),10,hi?'#ffc860':'#454340');
+  });
+  txt(ctx,W/2,H-8,'index',10,'#2a2a28');
+}
+function listInsert(){
+  if(listAnim)cancelAnimationFrame(listAnim);
+  const val=parseInt(document.getElementById('list-val').value)||0;
+  const idx=Math.max(0,Math.min(parseInt(document.getElementById('list-idx').value)||0,listData.length));
+  const liMinW=Math.max(500,(listData.length+1)*(54+8)-8+80);
+  const s=mkCanvas('list-c',150,liMinW);if(!s)return;
+  const{ctx,W,H}=s;const bw=54,bh=48,sy=42;
+  const newCount=listData.length+1;
+  let start=null;const dur=600;
+  setLog('list-log',`Inserting ${val} at index ${idx} — shifting ${listData.length-idx} item(s)…`,true);
+  function frame(now){
+    if(!start)start=now;
+    const t=easeOut(Math.min((now-start)/dur,1));
+    ctx.clearRect(-1,-1,W+2,H+2);
+    txt(ctx,W/2,18,'ordered — each item has an index',11,'#454340');
+    listData.forEach((v,i)=>{
+      const srcX=listGetX(listData.length,i,W);
+      const dstX=listGetX(newCount,i>=idx?i+1:i,W);
+      const x=lerp(srcX,dstX,t);
+      box(ctx,x,sy,bw,bh,'rgba(79,142,247,.13)','rgba(79,142,247,.5)',v,'#a8c8ff');
+      txt(ctx,x+bw/2,sy+bh+15,String(i>=idx?i+1:i),10,'#454340');
+    });
+    const ghostX=lerp(listGetX(newCount,idx,W)-60,listGetX(newCount,idx,W),t);
+    ctx.save();ctx.globalAlpha=t;
+    box(ctx,ghostX,sy,bw,bh,'rgba(62,201,160,.22)','rgba(62,201,160,.7)',val,'#7de8c8');
+    ctx.restore();
+    if(t<1)listAnim=requestAnimationFrame(frame);
+    else{listData=[...listData.slice(0,idx),val,...listData.slice(idx)];listDraw(listData,[idx]);setLog('list-log',`Inserted ${val} at [${idx}]. List length: ${listData.length}.`);
+      setCodeBoth('list',()=>CODES.list.insert(val,idx),()=>JAVA_CODES.list.insert(val,idx));}
+  }
+  listAnim=requestAnimationFrame(frame);
+}
+function listRemove(){
+  if(listAnim)cancelAnimationFrame(listAnim);
+  const idx=Math.max(0,Math.min(parseInt(document.getElementById('list-idx').value)||0,listData.length-1));
+  const removed=listData[idx];
+  const lrMinW=Math.max(500,listData.length*(54+8)-8+80);
+  const s=mkCanvas('list-c',150,lrMinW);if(!s)return;
+  const{ctx,W,H}=s;const bw=54,bh=48,sy=42;
+  const newData=listData.filter((_,i)=>i!==idx);
+  let start=null;const dur=600;
+  setLog('list-log',`Removing index ${idx} (${removed})…`,true);
+  function frame(now){
+    if(!start)start=now;
+    const t=easeOut(Math.min((now-start)/dur,1));
+    ctx.clearRect(-1,-1,W+2,H+2);
+    txt(ctx,W/2,18,'ordered — each item has an index',11,'#454340');
+    listData.forEach((v,i)=>{
+      if(i===idx){ctx.save();ctx.globalAlpha=1-t;box(ctx,listGetX(listData.length,i,W),sy,bw,bh,'rgba(240,96,80,.2)','rgba(240,96,80,.6)',v,'#ff9a90');ctx.restore();return;}
+      const srcX=listGetX(listData.length,i,W);
+      const dstX=listGetX(newData.length,i>idx?i-1:i,W);
+      const x=lerp(srcX,dstX,t);
+      box(ctx,x,sy,bw,bh,'rgba(79,142,247,.13)','rgba(79,142,247,.5)',v,'#a8c8ff');
+    });
+    if(t<1)listAnim=requestAnimationFrame(frame);
+    else{listData=newData;listDraw(listData);setLog('list-log',`Removed ${removed}. List length: ${listData.length}.`);
+  setCodeBoth('list',()=>CODES.list.remove(idx),()=>JAVA_CODES.list.remove(idx));}
+  }
+  listAnim=requestAnimationFrame(frame);
+}
+function listReset(){if(listAnim)cancelAnimationFrame(listAnim);listData=[3,7,1,9,4];listDraw(listData);setLog('list-log','An ordered collection. Items have indices. Duplicates allowed.');}
+
+/* ════════════════════════════════
+   DYNAMIC ARRAY
+════════════════════════════════ */
+let dynData=[10,20,30];let dynCap=6;let dynAnim=null;
+function dynDraw(hiIdx=-1){
+  const minW3=Math.max(500, dynCap*(52+4)-4+80);
+  const s=mkCanvas('dyn-c',170,minW3);if(!s)return;
+  const{ctx,W,H}=s;ctx.clearRect(-1,-1,W+2,H+2);
+  const bw=52,bh=46,sy=44,gap=4;
+  const totalW=dynCap*(bw+gap)-gap;const sx=(W-totalW)/2;
+  txt(ctx,W/2,18,`size: ${dynData.length}   capacity: ${dynCap}   (${Math.round(dynData.length/dynCap*100)}% full)`,11,'#454340');
+  // capacity slots
+  for(let i=0;i<dynCap;i++){
+    const x=sx+i*(bw+gap);
+    const filled=i<dynData.length,hi=i===hiIdx;
+    box(ctx,x,sy,bw,bh,
+      hi?'rgba(240,160,48,.22)':filled?'rgba(79,142,247,.13)':'rgba(255,255,255,.03)',
+      hi?'rgba(240,160,48,.7)':filled?'rgba(79,142,247,.4)':'rgba(255,255,255,.07)',
+      filled?dynData[i]:null,
+      hi?'#ffc860':'#a8c8ff');
+    if(!filled)txt(ctx,x+bw/2,sy+bh/2,'—',12,'#2a2a28');
+    txt(ctx,x+bw/2,sy+bh+14,String(i),10,'#454340');
+  }
+  // fill bar
+  const barY=sy+bh+32,barH=6,barW=totalW;
+  rr(ctx,sx,barY,barW,barH,3);ctx.fillStyle='rgba(255,255,255,.05)';ctx.fill();
+  rr(ctx,sx,barY,Math.round(barW*dynData.length/dynCap),barH,3);
+  ctx.fillStyle=dynData.length/dynCap>.75?'rgba(240,96,80,.7)':'rgba(62,201,160,.7)';ctx.fill();
+  txt(ctx,W/2,H-6,'capacity doubles when full',10,'#2a2a28');
+}
+function dynPush(){
+  if(dynAnim)cancelAnimationFrame(dynAnim);
+  const val=parseInt(document.getElementById('dyn-val').value)||0;
+  if(dynData.length===dynCap){
+    // resize animation
+    const oldCap=dynCap;dynCap*=2;
+    setLog('dyn-log',`Array full! Doubling capacity: ${oldCap} → ${dynCap}. Copying all items to new array…`,true);
+    let start=null;
+    function frame(now){
+      if(!start)start=now;const t=easeOut(Math.min((now-start)/700,1));
+      const rminW=Math.max(500, dynCap*(52+4)-4+80);
+      const s=mkCanvas('dyn-c',170,rminW);if(!s)return;
+      const{ctx,W,H}=s;ctx.clearRect(-1,-1,W+2,H+2);
+      const bw=52,bh=46,gap=4;
+      const totalW=dynCap*(bw+gap)-gap;const sx=(W-totalW)/2;
+      txt(ctx,W/2,18,`Resizing… capacity: ${oldCap} → ${dynCap}`,11,'rgba(240,96,80,.8)');
+      for(let i=0;i<dynCap;i++){
+        const x=sx+i*(bw+gap);
+        const filled=i<dynData.length;
+        ctx.save();ctx.globalAlpha=filled?1:t*.4;
+        box(ctx,x,46,bw,bh,filled?'rgba(79,142,247,.13)':'rgba(62,201,160,.08)',filled?'rgba(79,142,247,.4)':'rgba(62,201,160,.3)',filled?dynData[i]:null,'#a8c8ff');
+        ctx.restore();
+        txt(ctx,x+bw/2,46+bh+14,String(i),10,'#454340');
+      }
+      if(t<1)dynAnim=requestAnimationFrame(frame);
+      else{dynData.push(val);dynDraw(dynData.length-1);setLog('dyn-log',`Resized to ${dynCap}. Added ${val} at index ${dynData.length-1}.`);
+      setCodeBoth('dyn',()=>CODES.dyn.push(val),()=>JAVA_CODES.dyn.push(val));}
+    }
+    dynAnim=requestAnimationFrame(frame);
+  }else{
+    dynData.push(val);dynDraw(dynData.length-1);
+    setLog('dyn-log',`Pushed ${val} at index ${dynData.length-1}. ${dynCap-dynData.length} slot(s) remaining.`);
+  setCodeBoth('dyn',()=>CODES.dyn.push(val),()=>JAVA_CODES.dyn.push(val));
+  }
+}
+function dynPop(){if(!dynData.length)return;const v=dynData.pop();dynDraw();setLog('dyn-log',`Popped ${v}. Size: ${dynData.length}.`);
+  setCodeBoth('dyn',()=>CODES.dyn.pop(),()=>JAVA_CODES.dyn.pop());}
+function dynReset(){if(dynAnim)cancelAnimationFrame(dynAnim);dynData=[10,20,30];dynCap=6;dynDraw();setLog('dyn-log','Backed by an array. Capacity doubles automatically when full.');}
+
+/* ════════════════════════════════
+   STACK — plate stack visual
+════════════════════════════════ */
+let stackData=[5,12,8,3];let stackAnim=null;
+function stackDraw(hiTop=false){
+  const ph=38,gap=6;
+  const canvasH=Math.max(180, 30+stackData.length*(ph+gap)+60);
+  const s=mkCanvas('stack-c',canvasH);if(!s)return;
+  const{ctx,W,H}=s;ctx.clearRect(-1,-1,W+2,H+2);
+  const pw=180,sx=(W-pw)/2;
+  const base=H-30;
+  txt(ctx,W/2,16,'Last In, First Out — like a stack of plates',11,'#454340');
+  ctx.save();ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(sx-20,base);ctx.lineTo(sx+pw+20,base);ctx.stroke();
+  ctx.restore();
+  txt(ctx,sx+pw/2,base+14,'table surface',9,'#2a2a28');
+  stackData.forEach((v,i)=>{
+    const y=base-(i+1)*(ph+gap);
+    const isTop=i===stackData.length-1;
+    const hi=isTop&&hiTop;
+    box(ctx,sx,y,pw,ph,
+      hi?'rgba(240,160,48,.25)':isTop?'rgba(62,201,160,.18)':'rgba(79,142,247,.13)',
+      hi?'rgba(240,160,48,.8)':isTop?'rgba(62,201,160,.6)':'rgba(79,142,247,.4)',
+      v, hi?'#ffc860':isTop?'#7de8c8':'#a8c8ff', 8, isTop?1.5:.8);
+    if(isTop){
+      txt(ctx,sx-28,y+ph/2,'TOP',9,'#3ec9a0');
+      arw(ctx,sx-10,y+ph/2,sx-2,y+ph/2,'rgba(62,201,160,.6)');
+    }
+  });
+  if(stackData.length===0)txt(ctx,W/2,base-60,'(empty)',12,'#2a2a28');
+}
+function stackPush(){
+  if(stackAnim)cancelAnimationFrame(stackAnim);
+  const val=parseInt(document.getElementById('stack-val').value)||0;
+  const ph=38,gap=6;
+  const newCount=stackData.length+1;
+  const canvasH=Math.max(180, 30+newCount*(ph+gap)+60);
+  const s=mkCanvas('stack-c',canvasH);if(!s)return;
+  const{ctx,W,H}=s;const pw=180,sx=(W-pw)/2;
+  const base=H-30;
+  const targetY=base-newCount*(ph+gap);
+  let start=null;
+  function frame(now){
+    if(!start)start=now;const t=easeOut(Math.min((now-start)/450,1));
+    ctx.clearRect(-1,-1,W+2,H+2);
+    txt(ctx,W/2,16,'Last In, First Out — like a stack of plates',11,'#454340');
+    ctx.save();ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(sx-20,base);ctx.lineTo(sx+pw+20,base);ctx.stroke();ctx.restore();
+    txt(ctx,sx+pw/2,base+14,'table surface',9,'#2a2a28');
+    stackData.forEach((v,i)=>{
+      const y=base-(i+1)*(ph+gap);
+      box(ctx,sx,y,pw,ph,'rgba(79,142,247,.13)','rgba(79,142,247,.4)',v,'#a8c8ff');
+    });
+    const ghostY=lerp(targetY-80,targetY,t);
+    ctx.save();ctx.globalAlpha=t;
+    box(ctx,sx,ghostY,pw,ph,'rgba(62,201,160,.22)','rgba(62,201,160,.7)',val,'#7de8c8',8,1.5);
+    ctx.restore();
+    if(t<1)stackAnim=requestAnimationFrame(frame);
+    else{stackData.push(val);stackDraw(true);setLog('stack-log',`Pushed ${val} onto the top. Stack size: ${stackData.length}.`);
+      setCodeBoth('stack',()=>CODES.stack.push(val),()=>JAVA_CODES.stack.push(val));}
+  }
+  setLog('stack-log',`Pushing ${val} onto the top…`,true);
+  stackAnim=requestAnimationFrame(frame);
+}
+function stackPop(){
+  if(!stackData.length)return;
+  if(stackAnim)cancelAnimationFrame(stackAnim);
+  const ph=38,gap=6;
+  const canvasH=Math.max(180, 30+stackData.length*(ph+gap)+60);
+  const s=mkCanvas('stack-c',canvasH);if(!s)return;
+  const{ctx,W,H}=s;const pw=180,sx=(W-pw)/2;
+  const base=H-30;
+  const topY=base-stackData.length*(ph+gap);
+  let start=null;const topVal=stackData[stackData.length-1];
+  function frame(now){
+    if(!start)start=now;const t=easeOut(Math.min((now-start)/400,1));
+    ctx.clearRect(-1,-1,W+2,H+2);
+    txt(ctx,W/2,16,'Last In, First Out — like a stack of plates',11,'#454340');
+    ctx.save();ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(sx-20,base);ctx.lineTo(sx+pw+20,base);ctx.stroke();ctx.restore();
+    txt(ctx,sx+pw/2,base+14,'table surface',9,'#2a2a28');
+    stackData.forEach((v,i)=>{
+      if(i===stackData.length-1)return;
+      const y=base-(i+1)*(ph+gap);
+      box(ctx,sx,y,pw,ph,'rgba(79,142,247,.13)','rgba(79,142,247,.4)',v,'#a8c8ff');
+    });
+    ctx.save();ctx.globalAlpha=1-t;
+    box(ctx,sx,lerp(topY,topY-70,t),pw,ph,'rgba(240,96,80,.2)','rgba(240,96,80,.7)',topVal,'#ff9a90',8,1.5);
+    ctx.restore();
+    if(t<1)stackAnim=requestAnimationFrame(frame);
+    else{stackData.pop();stackDraw();setLog('stack-log',`Popped ${topVal} off the top. Stack size: ${stackData.length}.`);
+    setCodeBoth('stack',()=>CODES.stack.pop(),()=>JAVA_CODES.stack.pop());}
+  }
+  setLog('stack-log',`Popping ${topVal} off the top…`,true);
+  stackAnim=requestAnimationFrame(frame);
+}
+function stackReset(){if(stackAnim)cancelAnimationFrame(stackAnim);stackData=[5,12,8,3];stackDraw();setLog('stack-log','Only the TOP is accessible. Push adds, pop removes — both from the top.');}
+
+/* ════════════════════════════════
+   QUEUE — coffee shop line
+════════════════════════════════ */
+let queueData=['Alice','Bob','Carol','Dave'];let qAnim=null;
+const EMOJIS=['🧑','👩','👨','🧔','👧','🧒','👴','👵','🙋','🧑‍💻'];
+let qEmojiMap={};
+function qGetEmoji(name){if(!qEmojiMap[name])qEmojiMap[name]=EMOJIS[Object.keys(qEmojiMap).length%EMOJIS.length];return qEmojiMap[name];}
+function qDraw(hiF=false,hiB=false){
+  const minW4=Math.max(560, 110+20+queueData.length*(64+8)+40);
+  const s=mkCanvas('queue-c',200,minW4);if(!s)return;
+  const{ctx,W,H}=s;ctx.clearRect(-1,-1,W+2,H+2);
+  // coffee shop counter on the left
+  const ctrW=70,ctrH=100,ctrX=18,ctrY=(H-ctrH)/2;
+  box(ctx,ctrX,ctrY,ctrW,ctrH,'rgba(139,90,43,.3)','rgba(139,90,43,.6)',null);
+  txt(ctx,ctrX+ctrW/2,ctrY+20,'☕',18,'#fff');
+  txt(ctx,ctrX+ctrW/2,ctrY+48,'CAFÉ',9,'rgba(200,160,100,.8)');
+  txt(ctx,ctrX+ctrW/2,ctrY+62,'SERVED',9,'rgba(200,160,100,.8)');
+  txt(ctx,ctrX+ctrW/2,ctrY+76,'HERE',9,'rgba(200,160,100,.8)');
+  // queue rope line guide
+  const lineY=H/2,startX=ctrX+ctrW+20;
+  ctx.save();ctx.strokeStyle='rgba(255,200,60,.2)';ctx.lineWidth=1;ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(startX,lineY);ctx.lineTo(W-20,lineY);ctx.stroke();ctx.restore();
+  txt(ctx,startX+10,lineY-22,'← served first (FRONT)',9,'#3a3a38');
+  txt(ctx,W-50,lineY-22,'joins here (BACK) →',9,'#3a3a38');
+  // people in line
+  const pw=64,ph=72,gap=8;
+  queueData.forEach((name,i)=>{
+    const x=startX+i*(pw+gap);if(x+pw>W-10)return;
+    const isFront=i===0,isBack=i===queueData.length-1;
+    const hi=(isFront&&hiF)||(isBack&&hiB);
+    box(ctx,x,lineY-ph/2,pw,ph,
+      hi?'rgba(240,160,48,.22)':isFront?'rgba(62,201,160,.18)':'rgba(79,142,247,.12)',
+      hi?'rgba(240,160,48,.7)':isFront?'rgba(62,201,160,.55)':'rgba(79,142,247,.4)',
+      null,'#fff',10,hi?1.5:.8);
+    txt(ctx,x+pw/2,lineY-ph/2+22,qGetEmoji(name),18,'#fff');
+    txt(ctx,x+pw/2,lineY-ph/2+44,name,9,hi?'#ffc860':isFront?'#7de8c8':'#a8c8ff');
+    if(isFront){txt(ctx,x+pw/2,lineY+ph/2+12,'FRONT',8,'#3ec9a0');}
+    if(isBack&&queueData.length>1){txt(ctx,x+pw/2,lineY+ph/2+12,'BACK',8,'#888785');}
+  });
+  if(!queueData.length)txt(ctx,W/2,H/2,'(no one in line)',12,'#2a2a28');
+}
+function qEnqueue(){
+  const names=['Eve','Frank','Grace','Hiro','Iris','Jay','Kim','Leo'];
+  const name=document.getElementById('q-val').value.trim()||names[Math.floor(Math.random()*names.length)];
+  queueData.push(name);qDraw(false,true);
+  setLog('queue-log',`${name} joined the back of the line. Queue length: ${queueData.length}.`,true);
+  setCodeBoth('queue',()=>CODES.queue.enqueue(name),()=>JAVA_CODES.queue.enqueue(name));
+  setTimeout(()=>qDraw(),600);
+}
+function qDequeue(){
+  if(!queueData.length)return;
+  const name=queueData[0];
+  qDraw(true,false);
+  setLog('queue-log',`${name} reached the front and gets served! ☕ Queue length: ${queueData.length-1}.`,true);
+  setCodeBoth('queue',()=>CODES.queue.dequeue(),()=>JAVA_CODES.queue.dequeue());
+  setTimeout(()=>{queueData.shift();qDraw();},600);
+}
+function qReset(){queueData=['Alice','Bob','Carol','Dave'];qEmojiMap={};qDraw();setLog('queue-log','First In First Out — join the back, served from the front. Just like a real line.');}
+
+/* ════════════════════════════════
+   DEQUE — train with doors on both ends
+════════════════════════════════ */
+let dequeData=[40,10,25,15,35];let deqAnim=null;
+function deqDraw(hiFront=false,hiBack=false){
+  const minW5=Math.max(500, dequeData.length*(72+6)-6+120);
+  const s=mkCanvas('deq-c',190,minW5);if(!s)return;
+  const{ctx,W,H}=s;ctx.clearRect(-1,-1,W+2,H+2);
+  txt(ctx,W/2,16,'Insert / remove from BOTH ends — like train carriages',11,'#454340');
+  const bw=72,bh=56,gap=6,sy=(H-bh)/2+8;
+  const total=dequeData.length*(bw+gap)-gap;
+  const sx=(W-total)/2;
+  // train body connector
+  if(dequeData.length>1){
+    ctx.save();ctx.strokeStyle='rgba(255,255,255,.06)';ctx.lineWidth=bh-8;
+    ctx.beginPath();ctx.moveTo(sx+bw,sy+bh/2);ctx.lineTo(sx+total-bw,sy+bh/2);ctx.stroke();ctx.restore();
+  }
+  dequeData.forEach((v,i)=>{
+    const x=sx+i*(bw+gap);
+    const isFront=i===0,isBack=i===dequeData.length-1;
+    const hi=(isFront&&hiFront)||(isBack&&hiBack);
+    // carriage
+    box(ctx,x,sy,bw,bh,
+      hi?'rgba(240,160,48,.25)':isFront?'rgba(159,126,247,.2)':isBack?'rgba(240,96,80,.18)':'rgba(79,142,247,.13)',
+      hi?'rgba(240,160,48,.8)':isFront?'rgba(159,126,247,.6)':isBack?'rgba(240,96,80,.5)':'rgba(79,142,247,.4)',
+      v, hi?'#ffc860':isFront?'#c4adff':isBack?'#ff9a90':'#a8c8ff', 6, hi?1.5:.8);
+    // wheels
+    const wx=[x+12,x+bw-12];
+    wx.forEach(cx=>{
+      ctx.save();ctx.beginPath();ctx.arc(Math.round(cx),sy+bh+8,7,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,.1)';ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=.8;ctx.fill();ctx.stroke();ctx.restore();
+    });
+    if(isFront){
+      // front door arrow
+      arw(ctx,x-24,sy+bh/2,x-2,sy+bh/2,'rgba(159,126,247,.5)');
+      arw(ctx,x+2,sy+bh/2,x-20,sy+bh/2,'rgba(159,126,247,.5)');
+      txt(ctx,x+bw/2,sy-12,'FRONT',8,'#9f7ef7');
+    }
+    if(isBack){
+      arw(ctx,x+bw+22,sy+bh/2,x+bw+2,sy+bh/2,'rgba(240,96,80,.5)');
+      arw(ctx,x+bw-2,sy+bh/2,x+bw+20,sy+bh/2,'rgba(240,96,80,.5)');
+      txt(ctx,x+bw/2,sy-12,'BACK',8,'#f06050');
+    }
+  });
+  txt(ctx,W/2,H-4,'← front (purple)   back (red) →',9,'#2a2a28');
+}
+function deqPushFront(){const v=parseInt(document.getElementById('deq-val').value)||0;dequeData.unshift(v);deqDraw(true,false);setLog('deq-log',`Added ${v} to the FRONT. Deque: [${dequeData.join(', ')}]`,true);
+  setCodeBoth('deq',()=>CODES.deq.pushFront(v),()=>JAVA_CODES.deq.pushFront(v));setTimeout(()=>deqDraw(),500);}
+function deqPushBack(){const v=parseInt(document.getElementById('deq-val').value)||0;dequeData.push(v);deqDraw(false,true);setLog('deq-log',`Added ${v} to the BACK. Deque: [${dequeData.join(', ')}]`,true);
+  setCodeBoth('deq',()=>CODES.deq.pushBack(v),()=>JAVA_CODES.deq.pushBack(v));setTimeout(()=>deqDraw(),500);}
+function deqPopFront(){if(!dequeData.length)return;const v=dequeData.shift();deqDraw();setLog('deq-log',`Removed ${v} from the FRONT. Deque: [${dequeData.join(', ')}]`);
+  setCodeBoth('deq',()=>CODES.deq.popFront(),()=>JAVA_CODES.deq.popFront());}
+function deqPopBack(){if(!dequeData.length)return;const v=dequeData.pop();deqDraw();setLog('deq-log',`Removed ${v} from the BACK. Deque: [${dequeData.join(', ')}]`);
+  setCodeBoth('deq',()=>CODES.deq.popBack(),()=>JAVA_CODES.deq.popBack());}
+function deqReset(){dequeData=[40,10,25,15,35];deqDraw();setLog('deq-log','Double-ended queue. Insert and remove from either end freely.');}
+
+/* ════════════════════════════════
+   BAG — actual drawstring bag
+════════════════════════════════ */
+let bagData=[7,3,7,12,5,7,2,9];let bagAnim=null;
+function bagDraw(newItem=null){
+  const s=mkCanvas('bag-c',240);if(!s)return;
+  const{ctx,W,H}=s;ctx.clearRect(-1,-1,W+2,H+2);
+  txt(ctx,W/2,16,'Unordered — duplicates allowed — no index',11,'#454340');
+  const cx=W/2,cy=H/2+18,rx=130,ry=88;
+  // bag body
+  ctx.save();
+  ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
+  ctx.fillStyle='rgba(139,90,43,.22)';ctx.strokeStyle='rgba(180,120,50,.5)';ctx.lineWidth=2;ctx.fill();ctx.stroke();
+  // bag top opening / drawstring
+  ctx.beginPath();ctx.ellipse(cx,cy-ry+14,rx*.55,16,0,0,Math.PI*2);
+  ctx.fillStyle='rgba(100,60,20,.5)';ctx.strokeStyle='rgba(180,120,50,.4)';ctx.lineWidth=1.5;ctx.fill();ctx.stroke();
+  // drawstring bow
+  ctx.strokeStyle='rgba(220,160,60,.7)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(cx-20,cy-ry+14);ctx.bezierCurveTo(cx-30,cy-ry,cx-10,cy-ry-14,cx,cy-ry-8);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx+20,cy-ry+14);ctx.bezierCurveTo(cx+30,cy-ry,cx+10,cy-ry-14,cx,cy-ry-8);ctx.stroke();
+  ctx.restore();
+  // items scattered inside bag
+  const placed=[];
+  bagData.forEach((v,i)=>{
+    let x,y,tries=0;
+    do{
+      const angle=Math.random()*Math.PI*2;
+      const r=Math.random()*.7;
+      x=cx+Math.cos(angle)*rx*r;
+      y=cy+Math.sin(angle)*ry*r+10;
+      tries++;
+    }while(tries<30&&placed.some(p=>Math.hypot(p.x-x,p.y-y)<32));
+    placed.push({x,y});
+    box(ctx,x-16,y-14,32,28,'rgba(79,142,247,.25)','rgba(79,142,247,.6)',v,'#a8c8ff',6);
+  });
+  if(newItem){
+    ctx.save();ctx.globalAlpha=.7;
+    box(ctx,cx-16,cy-ry-4,32,28,'rgba(62,201,160,.4)','rgba(62,201,160,.8)',newItem,'#7de8c8',6);
+    ctx.restore();
+  }
+  // count badge
+  box(ctx,cx-24,H-28,48,22,'rgba(240,160,48,.18)','rgba(240,160,48,.5)',`${bagData.length} items`,'#ffc860',6);
+}
+function bagAdd(){const v=parseInt(document.getElementById('bag-val').value)||Math.floor(Math.random()*20)+1;bagData.push(v);bagDraw(v);setLog('bag-log',`Added ${v} to the bag. ${bagData.length} items total. Notice: no particular order!`,true);
+  setCodeBoth('bag',()=>CODES.bag.add(v),()=>JAVA_CODES.bag.add(v));setTimeout(()=>bagDraw(),400);}
+function bagRemove(){if(!bagData.length)return;const i=Math.floor(Math.random()*bagData.length);const v=bagData.splice(i,1)[0];bagDraw();setLog('bag-log',`Removed a ${v}. Order doesn't matter — could be any item.`);
+  setCodeBoth('bag',()=>CODES.bag.remove(),()=>JAVA_CODES.bag.remove());}
+function bagReset(){bagData=[7,3,7,12,5,7,2,9];bagDraw();setLog('bag-log','No order, no index, duplicates fine. Like reaching into a bag.');}
+
+/* ════════════════════════════════
+   SET — venn circle with distinct items
+════════════════════════════════ */
+let setData=new Set([3,7,12,5,9,1]);let setAnim=null;
+function setDraw(flash=null,duplicate=false){
+  const s=mkCanvas('set-c',230);if(!s)return;
+  const{ctx,W,H}=s;ctx.clearRect(-1,-1,W+2,H+2);
+  txt(ctx,W/2,16,'Every item is unique — no duplicates allowed',11,'#454340');
+  const cx=W/2,cy=H/2+12,r=90;
+  // outer glow
+  ctx.save();
+  const grad=ctx.createRadialGradient(cx,cy,r*.4,cx,cy,r);
+  grad.addColorStop(0,'rgba(94,196,96,.08)');grad.addColorStop(1,'rgba(94,196,96,.0)');
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=grad;ctx.fill();
+  // circle
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle=duplicate?'rgba(240,96,80,.7)':'rgba(94,196,96,.5)';ctx.lineWidth=duplicate?2:1.5;ctx.stroke();
+  ctx.restore();
+  txt(ctx,cx,cy-r-12,'{ distinct items }',10,duplicate?'#f06050':'#5ec460');
+  // items arranged in circle
+  const arr=[...setData];
+  arr.forEach((v,i)=>{
+    const angle=-Math.PI/2+(i/arr.length)*Math.PI*2;
+    const ir=r*.65;
+    const x=cx+Math.cos(angle)*ir,y=cy+Math.sin(angle)*ir;
+    const isFlash=v===flash;
+    box(ctx,x-16,y-14,32,28,
+      isFlash?'rgba(240,160,48,.3)':'rgba(94,196,96,.2)',
+      isFlash?'rgba(240,160,48,.8)':'rgba(94,196,96,.6)',
+      v, isFlash?'#ffc860':'#90dd92', 6, isFlash?1.5:.8);
+  });
+  if(duplicate){
+    txt(ctx,cx,cy+r+20,`Duplicate rejected! Already in set.`,10,'#f06050');
+  }
+  box(ctx,cx-30,H-24,60,18,'rgba(94,196,96,.15)','rgba(94,196,96,.4)',`${setData.size} items`,'#90dd92',5);
+}
+function setAdd(){
+  const v=parseInt(document.getElementById('set-val').value)||0;
+  if(setData.has(v)){setDraw(v,true);setLog('set-log',`${v} already exists in the set — rejected! Sets only hold distinct items.`,true);
+  setCodeBoth('set',()=>CODES.set.reject(v),()=>JAVA_CODES.set.reject(v));setTimeout(()=>setDraw(v,false),800);return;}
+  setData.add(v);setDraw(v,false);setLog('set-log',`Added ${v}. Set size: ${setData.size}.`,true);
+  setCodeBoth('set',()=>CODES.set.add(v),()=>JAVA_CODES.set.add(v));
+  setTimeout(()=>setDraw(),500);
+}
+function setRemove(){const v=parseInt(document.getElementById('set-val').value)||0;if(!setData.has(v)){setLog('set-log',`${v} is not in the set.`);return;}setData.delete(v);setDraw();setLog('set-log',`Removed ${v}. Set size: ${setData.size}.`);
+  setCodeBoth('set',()=>CODES.set.remove(v),()=>JAVA_CODES.set.remove(v));}
+function setReset(){setData=new Set([3,7,12,5,9,1]);setDraw();setLog('set-log','Try adding a duplicate — the set will reject it.');}
+
+/* ════════════════════════════════
+   PRIORITY QUEUE — hospital triage
+════════════════════════════════ */
+let pqData=[{name:'Alice',pri:3},{name:'Bob',pri:8},{name:'Carol',pri:5},{name:'Dave',pri:10},{name:'Eve',pri:1}];
+function pqSort(){pqData.sort((a,b)=>b.pri-a.pri);}
+const URGENCY=['','🟢 Low','🟡 Minor','🟡 Moderate','🟠 Serious','🟠 High','🔴 Critical','🔴 Critical','🚨 Severe','🚨 Severe','🆘 Immediate'];
+function pqDraw(hiTop=false){
+  pqSort();
+  const bh=30,gap=5,topPad=34,deskW=80;
+  const rows=Math.max(1,pqData.length);
+  const canvasH=Math.max(160, topPad+rows*(bh+gap)+20);
+  const minW6=Math.max(560, 110+Math.max(...(pqData.map(p=>p.name.length)||[4]))*8+320);
+  const s=mkCanvas('pq-c',canvasH,minW6);if(!s)return;
+  const{ctx,W,H}=s;ctx.clearRect(-1,-1,W+2,H+2);
+  txt(ctx,W/2,16,'Hospital triage — highest priority seen first',11,'#454340');
+  const deskX=18,deskH=Math.min(90,H-40),deskY=(H-deskH)/2;
+  box(ctx,deskX,deskY,deskW,deskH,'rgba(240,96,80,.18)','rgba(240,96,80,.4)',null);
+  txt(ctx,deskX+deskW/2,deskY+22,'🏥',18,'#fff');
+  txt(ctx,deskX+deskW/2,deskY+Math.min(50,deskH*.55),'TRIAGE',8,'rgba(255,150,140,.8)');
+  txt(ctx,deskX+deskW/2,deskY+Math.min(63,deskH*.7),'DESK',8,'rgba(255,150,140,.8)');
+  const bw=W-deskX-deskW-30,bx=deskX+deskW+12;
+  pqData.forEach((p,i)=>{
+    const y=topPad+i*(bh+gap);
+    const isTop=i===0,hi=isTop&&hiTop;
+    const hue=p.pri>=8?'rgba(240,96,80,':p.pri>=5?'rgba(240,160,48,':'rgba(94,196,96,';
+    box(ctx,bx,y,bw,bh,hi?'rgba(240,160,48,.25)':hue+'.18)',hi?'rgba(240,160,48,.8)':hue+'.6)',null,'#fff',6,hi?1.5:.8);
+    txt(ctx,bx+10+bw*.12,y+bh/2,'P'+p.pri,11,p.pri>=8?'#ff9a90':p.pri>=5?'#ffc860':'#90dd92','left');
+    txt(ctx,bx+bw*.28,y+bh/2,p.name,11,'#e8e6df','left');
+    txt(ctx,bx+bw*.62,y+bh/2,URGENCY[p.pri]||'',9,'rgba(255,255,255,.6)','left');
+    if(isTop){txt(ctx,bx+bw-36,y+bh/2,'NEXT →',8,'#ffc860');}
+  });
+  if(!pqData.length)txt(ctx,W/2,H/2,'(waiting room empty)',12,'#2a2a28');
+}
+function pqEnqueue(){
+  const name=document.getElementById('pq-name').value.trim()||'Patient';
+  const pri=Math.max(1,Math.min(10,parseInt(document.getElementById('pq-pri').value)||5));
+  pqData.push({name,pri});pqSort();pqDraw();
+  const pos=pqData.findIndex(p=>p.name===name&&p.pri===pri);
+  setLog('pq-log',`${name} (priority ${pri}) added. They are #${pos+1} in line — ${URGENCY[pri]}.`,true);
+  setCodeBoth('pq',()=>CODES.pq.enqueue(name,pri),()=>JAVA_CODES.pq.enqueue(name,pri));
+}
+function pqDequeue(){if(!pqData.length)return;pqSort();const p=pqData.shift();pqDraw();setLog('pq-log',`${p.name} (priority ${p.pri}) is called — ${URGENCY[p.pri]}. ${pqData.length} remaining.`,true);
+  setCodeBoth('pq',()=>CODES.pq.dequeue(),()=>JAVA_CODES.pq.dequeue());}
+function pqReset(){pqData=[{name:'Alice',pri:3},{name:'Bob',pri:8},{name:'Carol',pri:5},{name:'Dave',pri:10},{name:'Eve',pri:1}];pqDraw();setLog('pq-log','Highest priority is always seen first — regardless of arrival order.');}
+
+/* ════════════════════════════════
+   DICTIONARY — filing cabinet
+════════════════════════════════ */
+let dictData={name:'Casey',major:'CS',year:'2025',gpa:'3.8'};
+function dictDraw(hiKey=null){
+  const entries7=Object.entries(dictData);
+  const maxValLen=Math.max(4,...entries7.map(([k,v])=>v.length));
+  const minW7=Math.max(500, 110+16+Math.min(240,maxValLen*9)+80);
+  const s=mkCanvas('dict-c',230,minW7);if(!s)return;
+  const{ctx,W,H}=s;ctx.clearRect(-1,-1,W+2,H+2);
+  txt(ctx,W/2,16,'Key → Value pairs. Look up any value instantly by its key.',11,'#454340');
+  const entries=Object.entries(dictData);
+  const kw=110,vw=160,rh=30,gap=6;
+  const totalH=entries.length*(rh+gap)-gap;
+  const sx=(W-(kw+vw+16))/2,sy=(H-totalH)/2+8;
+  // cabinet outline
+  box(ctx,sx-12,sy-12,kw+vw+40,totalH+24,'rgba(180,140,60,.08)','rgba(180,140,60,.2)',null,'',10,.8);
+  txt(ctx,sx+(kw+vw+16)/2,sy-26,'🗄️  filing cabinet',10,'rgba(180,140,60,.6)');
+  // header
+  txt(ctx,sx+kw/2,sy-14,'key',9,'#454340');
+  txt(ctx,sx+kw+16+vw/2,sy-14,'value',9,'#454340');
+  entries.forEach(([k,v],i)=>{
+    const y=sy+i*(rh+gap);
+    const hi=k===hiKey;
+    box(ctx,sx,y,kw,rh,hi?'rgba(240,160,48,.22)':'rgba(159,126,247,.18)',hi?'rgba(240,160,48,.7)':'rgba(159,126,247,.5)',k,hi?'#ffc860':'#c4adff',6,.8);
+    // connector
+    arw(ctx,sx+kw+2,y+rh/2,sx+kw+14,y+rh/2,'rgba(255,255,255,.15)',5);
+    box(ctx,sx+kw+16,y,vw,rh,hi?'rgba(240,160,48,.12)':'rgba(79,142,247,.14)',hi?'rgba(240,160,48,.4)':'rgba(79,142,247,.4)',v,hi?'#ffd080':'#a8c8ff',6,.8);
+    // tab
+    box(ctx,sx-12,y+(rh-18)/2,10,18,'rgba(180,140,60,.2)','rgba(180,140,60,.3)',null,'',3,.5);
+  });
+}
+function dictSet(){
+  const k=document.getElementById('dict-key').value.trim();const v=document.getElementById('dict-val2').value.trim();
+  if(!k||!v)return;
+  const isNew=!(k in dictData);dictData[k]=v;dictDraw(k);
+  setLog('dict-log',`${isNew?'Added new':'Updated'} key "${k}" → "${v}". Dictionary size: ${Object.keys(dictData).length}.`,true);
+  setCodeBoth('dict',()=>CODES.dict.set(k,v),()=>JAVA_CODES.dict.set(k,v));
+  setTimeout(()=>dictDraw(),500);
+}
+function dictGet(){
+  const k=document.getElementById('dict-key').value.trim();
+  if(k in dictData){dictDraw(k);setLog('dict-log',`dict["${k}"] → "${dictData[k]}". Direct O(1) lookup — no searching needed.`,true);
+  setCodeBoth('dict',()=>CODES.dict.get(k),()=>JAVA_CODES.dict.get(k));setTimeout(()=>dictDraw(),800);}
+  else setLog('dict-log',`Key "${k}" not found in dictionary.`);
+}
+function dictDelete(){
+  const k=document.getElementById('dict-key').value.trim();
+  if(!(k in dictData)){setLog('dict-log',`Key "${k}" not found.`);return;}
+  delete dictData[k];dictDraw();setLog('dict-log',`Deleted key "${k}". Dictionary size: ${Object.keys(dictData).length}.`);
+  setCodeBoth('dict',()=>CODES.dict.delete(k),()=>JAVA_CODES.dict.delete(k));
+}
+function dictReset(){dictData={name:'Casey',major:'CS',year:'2025',gpa:'3.8'};dictDraw();setLog('dict-log','Key-value pairs. Look up any value instantly via its key.');}
+
+/* ════════════════════════════════
+   SECTIONS
+════════════════════════════════ */
+/* ── CODE SNIPPETS ── */
+function h(cls,t){return`<span class="tok-${cls}">${t}</span>`;}
+const kw=t=>h('kw',t), fn=t=>h('fn',t), st=t=>h('str',`"${t}"`), num=t=>h('num',t), cmt=t=>h('cmt',`# ${t}`), v=t=>h('var',t);
+
+const CODES = {
+  list: {
+    insert: (val,idx) => `${cmt('insert into a List')}
+${v('my_list')} = [3, 7, 1, 9, 4]
+${v('my_list')}.${fn('insert')}(${num(idx)}, ${num(val)})   ${cmt(`shifts items right from index ${idx}`)}
+${cmt(`result: ${[3,7,1,9,4].slice(0,idx).concat([val]).concat([3,7,1,9,4].slice(idx)).join(', ')}`)}`,
+    remove: (idx) => `${cmt('remove from a List by index')}
+${v('my_list')} = [3, 7, 1, 9, 4]
+${v('removed')} = ${v('my_list')}.${fn('pop')}(${num(idx)})   ${cmt(`removes item at index ${idx}`)}
+${cmt('items after it shift left to fill the gap')}`,
+  },
+  dyn: {
+    push: (val) => `${cmt('append to a dynamic array (Python list)')}
+${v('arr')} = [10, 20, 30]
+${v('arr')}.${fn('append')}(${num(val)})       ${cmt('O(1) amortized — may trigger resize')}
+${cmt('if capacity was full, a new array 2× bigger')}
+${cmt('is allocated and all items are copied over')}`,
+    pop: () => `${cmt('remove last item from dynamic array')}
+${v('arr')} = [10, 20, 30]
+${v('last')} = ${v('arr')}.${fn('pop')}()      ${cmt('O(1) — removes from end, no shifting')}`,
+  },
+  stack: {
+    push: (val) => `${cmt('push onto a stack')}
+${v('stack')} = []
+${v('stack')}.${fn('append')}(${num(val)})     ${cmt('adds to the top')}
+${cmt(`top is now: ${val}`)}`,
+    pop: () => `${cmt('pop from a stack')}
+${v('stack')} = [5, 12, 8, 3]
+${v('top')} = ${v('stack')}.${fn('pop')}()     ${cmt('removes & returns top item')}
+${cmt('only the top is ever accessible')}`,
+  },
+  queue: {
+    enqueue: (name) => `${kw('from')} collections ${kw('import')} deque
+${v('queue')} = deque([${st('Alice')}, ${st('Bob')}])
+${v('queue')}.${fn('append')}(${st(name)})  ${cmt('join at the back')}
+${cmt(`queue is now: ${['Alice','Bob',name].join(', ')}`)}`,
+    dequeue: () => `${kw('from')} collections ${kw('import')} deque
+${v('queue')} = deque([${st('Alice')}, ${st('Bob')}, ${st('Carol')}])
+${v('served')} = ${v('queue')}.${fn('popleft')}()  ${cmt('served from the front')}
+${cmt("served: 'Alice' — first in, first out")}`,
+  },
+  deq: {
+    pushFront: (val) => `${kw('from')} collections ${kw('import')} deque
+${v('dq')} = deque([40, 10, 25])
+${v('dq')}.${fn('appendleft')}(${num(val)})  ${cmt('add to front')}`,
+    pushBack: (val) => `${kw('from')} collections ${kw('import')} deque
+${v('dq')} = deque([40, 10, 25])
+${v('dq')}.${fn('append')}(${num(val)})      ${cmt('add to back')}`,
+    popFront: () => `${kw('from')} collections ${kw('import')} deque
+${v('dq')} = deque([40, 10, 25])
+${v('val')} = ${v('dq')}.${fn('popleft')}()  ${cmt('remove from front')}`,
+    popBack: () => `${kw('from')} collections ${kw('import')} deque
+${v('dq')} = deque([40, 10, 25])
+${v('val')} = ${v('dq')}.${fn('pop')}()      ${cmt('remove from back')}`,
+  },
+  bag: {
+    add: (val) => `${cmt('a Bag is just a list that allows duplicates')}
+${v('bag')} = [7, 3, 7, 12, 5]
+${v('bag')}.${fn('append')}(${num(val)})     ${cmt('order does not matter')}
+${cmt(`bag now has ${val} — duplicates welcome`)}`,
+    remove: () => `${kw('import')} random
+${v('bag')} = [7, 3, 7, 12, 5]
+${v('item')} = random.${fn('choice')}(${v('bag')})   ${cmt('grab any item')}
+${v('bag')}.${fn('remove')}(${v('item')})            ${cmt('removes first occurrence')}`,
+  },
+  set: {
+    add: (val) => `${v('my_set')} = {3, 7, 12, 5, 9}
+${v('my_set')}.${fn('add')}(${num(val)})     ${cmt('ignored if already present')}
+${cmt(`set is now: {3, 5, 7, 9, 12, ${val}} (auto-sorted)`)}`,
+    reject: (val) => `${v('my_set')} = {3, 7, 12, 5, 9}
+${v('my_set')}.${fn('add')}(${num(val)})     ${cmt(`${val} already in set — silently ignored`)}
+${cmt('no error, no duplicate — set unchanged')}`,
+    remove: (val) => `${v('my_set')} = {3, 7, 12, 5, 9}
+${v('my_set')}.${fn('discard')}(${num(val)})  ${cmt('removes if present, no error if not')}`,
+  },
+  pq: {
+    enqueue: (name, pri) => `${kw('import')} heapq
+${v('pq')} = []
+${cmt('store as (-priority, name) — heapq is a min-heap')}
+${cmt('so we negate priority to get max-heap behavior')}
+heapq.${fn('heappush')}(${v('pq')}, (${num(-pri)}, ${st(name)}))
+${cmt(`${name} (priority ${pri}) added and sorted in`)}`,
+    dequeue: () => `${kw('import')} heapq
+${v('pq')} = [(-10, ${st('Dave')}), (-8, ${st('Bob')}), (-5, ${st('Carol')})]
+${v('pri')}, ${v('name')} = heapq.${fn('heappop')}(${v('pq')})
+${cmt('always pops the highest priority item')}
+${cmt('result: Dave (priority 10)')}`,
+  },
+  dict: {
+    set: (key, val) => `${v('student')} = {${st('name')}: ${st('Casey')}, ${st('gpa')}: ${st('3.8')}}
+${v('student')}[${st(key)}] = ${st(val)}   ${cmt('O(1) average — hash lookup')}`,
+    get: (key) => `${v('student')} = {${st('name')}: ${st('Casey')}, ${st('gpa')}: ${st('3.8')}}
+${v('value')} = ${v('student')}[${st(key)}]  ${cmt('O(1) — no searching')}
+${cmt(`result: "${({name:'Casey',major:'CS',year:'2025',gpa:'3.8'}[key]||'...')}"`)}`,
+    delete: (key) => `${v('student')} = {${st('name')}: ${st('Casey')}, ${st('gpa')}: ${st('3.8')}}
+${kw('del')} ${v('student')}[${st(key)}]      ${cmt('removes key-value pair')}`,
+  },
+};
+
+function setCode(panelId, snippetFn){
+  const el=document.getElementById(panelId+'-code-pre');
+  if(el) el.innerHTML=snippetFn();
+}
+function setCodeBoth(panelId, pyFn, javaFn){
+  const el=document.getElementById(panelId+'-code-pre');
+  if(el) el.innerHTML=pyFn();
+  const jel=document.getElementById(panelId+'-java-pre');
+  if(jel) jel.innerHTML=javaFn();
+}
+function copyCode(panelId, lang){
+  const id = lang==='java' ? panelId+'-java-pre' : panelId+'-code-pre';
+  const el=document.getElementById(id);
+  if(!el)return;
+  const btnId = lang==='java' ? panelId+'-java-copy' : panelId+'-copy';
+  navigator.clipboard.writeText(el.innerText).then(()=>{
+    const btn=document.getElementById(btnId);
+    if(btn){const orig=btn.textContent;btn.textContent='copied!';setTimeout(()=>btn.textContent=orig,1200);}
+  });
+}
+
+const JAVA_CODES = {
+  list: {
+    insert: (val,idx) => `${h('cmt','// insert into a List (ArrayList)')}
+${h('kw','import')} java.util.ArrayList;
+ArrayList&lt;Integer&gt; list = ${h('kw','new')} ArrayList&lt;&gt;();
+list.${h('fn','add')}(${h('num','3')}); list.${h('fn','add')}(${h('num','7')}); list.${h('fn','add')}(${h('num','1')});
+list.${h('fn','add')}(${h('num',idx)}, ${h('num',val)});   ${h('cmt',`// inserts ${val} at index ${idx}, shifts right`)}`,
+    remove: (idx) => `${h('cmt','// remove from a List by index')}
+${h('kw','import')} java.util.ArrayList;
+ArrayList&lt;Integer&gt; list = ${h('kw','new')} ArrayList&lt;&gt;();
+${h('kw','int')} removed = list.${h('fn','remove')}(${h('num',idx)});  ${h('cmt',`// removes index ${idx}, items shift left`)}`,
+  },
+  dyn: {
+    push: (val) => `${h('cmt','// ArrayList grows automatically (dynamic array)')}
+${h('kw','import')} java.util.ArrayList;
+ArrayList&lt;Integer&gt; arr = ${h('kw','new')} ArrayList&lt;&gt;();
+arr.${h('fn','add')}(${h('num',val)});   ${h('cmt','// O(1) amortized — resizes internally when full')}
+${h('cmt','// Java doubles capacity and copies on resize')}`,
+    pop: () => `${h('cmt','// remove last element from ArrayList')}
+ArrayList&lt;Integer&gt; arr = ${h('kw','new')} ArrayList&lt;&gt;();
+${h('kw','int')} last = arr.${h('fn','remove')}(arr.${h('fn','size')}() - ${h('num','1')});  ${h('cmt','// O(1)')}`,
+  },
+  stack: {
+    push: (val) => `${h('cmt','// push onto a Stack')}
+${h('kw','import')} java.util.Stack;
+Stack&lt;Integer&gt; stack = ${h('kw','new')} Stack&lt;&gt;();
+stack.${h('fn','push')}(${h('num',val)});   ${h('cmt','// adds to the top')}
+${h('cmt',`// top is now: ${val}`)}`,
+    pop: () => `${h('cmt','// pop from a Stack')}
+${h('kw','import')} java.util.Stack;
+Stack&lt;Integer&gt; stack = ${h('kw','new')} Stack&lt;&gt;();
+${h('kw','int')} top = stack.${h('fn','pop')}();   ${h('cmt','// removes and returns top')}
+${h('cmt','// peek() lets you look without removing')}`,
+  },
+  queue: {
+    enqueue: (name) => `${h('cmt','// enqueue — add to back of Queue')}
+${h('kw','import')} java.util.LinkedList;
+${h('kw','import')} java.util.Queue;
+Queue&lt;String&gt; queue = ${h('kw','new')} LinkedList&lt;&gt;();
+queue.${h('fn','offer')}(${h('str',name)});   ${h('cmt','// joins at the back')}`,
+    dequeue: () => `${h('cmt','// dequeue — serve from front of Queue')}
+${h('kw','import')} java.util.LinkedList;
+${h('kw','import')} java.util.Queue;
+Queue&lt;String&gt; queue = ${h('kw','new')} LinkedList&lt;&gt;();
+String served = queue.${h('fn','poll')}();  ${h('cmt','// removes and returns front')}
+${h('cmt','// peek() returns front without removing')}`,
+  },
+  deq: {
+    pushFront: (val) => `${h('cmt','// add to front of Deque')}
+${h('kw','import')} java.util.ArrayDeque;
+ArrayDeque&lt;Integer&gt; dq = ${h('kw','new')} ArrayDeque&lt;&gt;();
+dq.${h('fn','addFirst')}(${h('num',val)});   ${h('cmt','// O(1)')}`,
+    pushBack: (val) => `${h('cmt','// add to back of Deque')}
+${h('kw','import')} java.util.ArrayDeque;
+ArrayDeque&lt;Integer&gt; dq = ${h('kw','new')} ArrayDeque&lt;&gt;();
+dq.${h('fn','addLast')}(${h('num',val)});    ${h('cmt','// O(1)')}`,
+    popFront: () => `${h('cmt','// remove from front of Deque')}
+${h('kw','import')} java.util.ArrayDeque;
+ArrayDeque&lt;Integer&gt; dq = ${h('kw','new')} ArrayDeque&lt;&gt;();
+${h('kw','int')} val = dq.${h('fn','removeFirst')}();  ${h('cmt','// O(1)')}`,
+    popBack: () => `${h('cmt','// remove from back of Deque')}
+${h('kw','import')} java.util.ArrayDeque;
+ArrayDeque&lt;Integer&gt; dq = ${h('kw','new')} ArrayDeque&lt;&gt;();
+${h('kw','int')} val = dq.${h('fn','removeLast')}();   ${h('cmt','// O(1)')}`,
+  },
+  bag: {
+    add: (val) => `${h('cmt','// Bag — no built-in, use ArrayList (allows duplicates)')}
+${h('kw','import')} java.util.ArrayList;
+ArrayList&lt;Integer&gt; bag = ${h('kw','new')} ArrayList&lt;&gt;();
+bag.${h('fn','add')}(${h('num',val)});   ${h('cmt','// order not guaranteed, duplicates welcome')}`,
+    remove: () => `${h('cmt','// remove a random item from the Bag')}
+${h('kw','import')} java.util.Random;
+${h('kw','int')} idx = ${h('kw','new')} Random().${h('fn','nextInt')}(bag.${h('fn','size')}());
+bag.${h('fn','remove')}(idx);   ${h('cmt','// removes item at random index')}`,
+  },
+  set: {
+    add: (val) => `${h('cmt','// add to a Set (rejects duplicates)')}
+${h('kw','import')} java.util.HashSet;
+HashSet&lt;Integer&gt; set = ${h('kw','new')} HashSet&lt;&gt;();
+set.${h('fn','add')}(${h('num',val)});   ${h('cmt','// ignored if already present')}`,
+    reject: (val) => `${h('cmt',`// ${val} already in set — silently ignored`)}
+${h('kw','import')} java.util.HashSet;
+HashSet&lt;Integer&gt; set = ${h('kw','new')} HashSet&lt;&gt;();
+set.${h('fn','add')}(${h('num',val)});   ${h('cmt','// no exception, no duplicate added')}
+${h('kw','boolean')} added = set.${h('fn','add')}(${h('num',val)});  ${h('cmt','// returns false')}`,
+    remove: (val) => `${h('cmt','// remove from a Set')}
+${h('kw','import')} java.util.HashSet;
+HashSet&lt;Integer&gt; set = ${h('kw','new')} HashSet&lt;&gt;();
+set.${h('fn','remove')}(${h('num',val)});   ${h('cmt','// no error if not present')}`,
+  },
+  pq: {
+    enqueue: (name, pri) => `${h('cmt','// PriorityQueue — highest priority first')}
+${h('kw','import')} java.util.PriorityQueue;
+${h('cmt','// use Comparator to make it a max-heap by priority')}
+PriorityQueue&lt;int[]&gt; pq = ${h('kw','new')} PriorityQueue&lt;&gt;(
+  (a, b) -&gt; b[${h('num','0')}] - a[${h('num','0')}]
+);
+pq.${h('fn','offer')}(${h('kw','new')} ${h('kw','int')}[]{${h('num',pri)}});  ${h('cmt',`// priority ${pri} — higher = sooner`)}`,
+    dequeue: () => `${h('cmt','// poll — removes highest priority item')}
+${h('kw','import')} java.util.PriorityQueue;
+PriorityQueue&lt;int[]&gt; pq = ${h('kw','new')} PriorityQueue&lt;&gt;(
+  (a, b) -&gt; b[${h('num','0')}] - a[${h('num','0')}]
+);
+${h('kw','int')}[] next = pq.${h('fn','poll')}();  ${h('cmt','// always the highest priority')}`,
+  },
+  dict: {
+    set: (key, val) => `${h('cmt','// put key-value pair into a HashMap')}
+${h('kw','import')} java.util.HashMap;
+HashMap&lt;String, String&gt; map = ${h('kw','new')} HashMap&lt;&gt;();
+map.${h('fn','put')}(${h('str',key)}, ${h('str',val)});   ${h('cmt','// O(1) average')}`,
+    get: (key) => `${h('cmt','// get value by key from HashMap')}
+${h('kw','import')} java.util.HashMap;
+HashMap&lt;String, String&gt; map = ${h('kw','new')} HashMap&lt;&gt;();
+String val = map.${h('fn','get')}(${h('str',key)});  ${h('cmt','// O(1) — no searching')}`,
+    delete: (key) => `${h('cmt','// remove a key from HashMap')}
+${h('kw','import')} java.util.HashMap;
+HashMap&lt;String, String&gt; map = ${h('kw','new')} HashMap&lt;&gt;();
+map.${h('fn','remove')}(${h('str',key)});   ${h('cmt','// O(1) average')}`,
+  },
+};
+
+const SECTIONS=[
+  {id:'list',label:'List',icon:'📋',accent:'#4f8ef7',
+   badge:'ordered · indexed · duplicates ok',
+   desc:'An ordered collection where each item has a position (index). You can access, insert, or remove items at any index. Duplicates are allowed.',
+   under:'Array, linked list',
+   controls:`<span class="clbl">value</span><input class="ci" id="list-val" type="number" value="42">
+     <span class="clbl">at index</span><input class="ci" id="list-idx" type="number" value="2">
+     <button class="cb p" onclick="listInsert()">Insert</button>
+     <button class="cb p" onclick="listRemove()">Remove</button>
+     <div class="csep"></div><button class="cb" onclick="listReset()">Reset</button>`,
+   canvas:'list-c',ch:150,log:'list-log',logDef:'An ordered collection. Items have indices. Duplicates allowed.',
+   callout:'<strong>vs. Dynamic Array:</strong> a List is the abstract idea — you can\'t do indexed access in O(1) unless the underlying structure supports it. Arrays give you that; linked lists don\'t.',
+   defaultCode:()=>CODES.list.insert(42,2),
+   defaultJavaCode:()=>JAVA_CODES.list.insert(42,2),
+   init:()=>listDraw(listData)},
+
+  {id:'dyn',label:'Dynamic Array',icon:'📦',accent:'#3ec9a0',
+   badge:'ordered · indexed · auto-resize',
+   desc:'Like a regular array but the size isn\'t fixed. When it runs out of space, it automatically doubles its capacity and copies everything over.',
+   under:'Array',
+   controls:`<span class="clbl">value</span><input class="ci" id="dyn-val" type="number" value="50">
+     <button class="cb p" onclick="dynPush()">Push</button>
+     <button class="cb p" onclick="dynPop()">Pop</button>
+     <div class="csep"></div><button class="cb" onclick="dynReset()">Reset</button>`,
+   canvas:'dyn-c',ch:170,log:'dyn-log',logDef:'Watch capacity double when the array gets full.',
+   callout:'<strong>The doubling trick:</strong> copying is O(n) but it happens rarely enough that the average cost per push is still O(1). This is called amortized O(1).',
+   defaultCode:()=>CODES.dyn.push(50),
+   defaultJavaCode:()=>JAVA_CODES.dyn.push(50),
+   init:()=>dynDraw()},
+
+  {id:'stack',label:'Stack',icon:'🍽️',accent:'#f0a030',
+   badge:'LIFO · top only · push / pop',
+   desc:'Items stack on top of each other like plates. You can only ever touch the top — push adds to the top, pop removes from the top. Last in, first out.',
+   under:'Linked list, array',
+   controls:`<span class="clbl">value</span><input class="ci" id="stack-val" type="number" value="99">
+     <button class="cb p" onclick="stackPush()">Push</button>
+     <button class="cb p" onclick="stackPop()">Pop</button>
+     <div class="csep"></div><button class="cb" onclick="stackReset()">Reset</button>`,
+   canvas:'stack-c',ch:240,log:'stack-log',logDef:'Only the TOP is accessible. Push adds, pop removes — both from the top.',
+   callout:'<strong>Used in:</strong> undo/redo, function call history (the call stack!), DFS, expression parsing.',
+   defaultCode:()=>CODES.stack.push(99),
+   defaultJavaCode:()=>JAVA_CODES.stack.push(99),
+   init:()=>stackDraw()},
+
+  {id:'queue',label:'Queue',icon:'☕',accent:'#9f7ef7',
+   badge:'FIFO · enqueue back · dequeue front',
+   desc:'Just like a line at a coffee shop — you join at the back and get served from the front. First in, first out.',
+   under:'Linked list, array',
+   controls:`<span class="clbl">name</span><input class="ci" id="q-val" type="text" value="Eve" style="width:80px">
+     <button class="cb p" onclick="qEnqueue()">Join line</button>
+     <button class="cb p" onclick="qDequeue()">Serve next</button>
+     <div class="csep"></div><button class="cb" onclick="qReset()">Reset</button>`,
+   canvas:'queue-c',ch:200,log:'queue-log',logDef:'First In First Out — join the back, served from the front.',
+   callout:'<strong>Used in:</strong> BFS graph traversal, print job scheduling, anything where order of arrival matters.',
+   defaultCode:()=>CODES.queue.enqueue('Eve'),
+   defaultJavaCode:()=>JAVA_CODES.queue.enqueue('Eve'),
+   init:()=>qDraw()},
+
+  {id:'deq',label:'Deque',icon:'🚂',accent:'#f06050',
+   badge:'double-ended · insert/remove both ends',
+   desc:'Short for "double-ended queue" (pronounced "deck"). Like a train — you can add or remove carriages from either end.',
+   under:'Linked list, array',
+   controls:`<span class="clbl">value</span><input class="ci" id="deq-val" type="number" value="99">
+     <button class="cb p" onclick="deqPushFront()">Add front</button>
+     <button class="cb p" onclick="deqPushBack()">Add back</button>
+     <div class="csep"></div>
+     <button class="cb" onclick="deqPopFront()">Remove front</button>
+     <button class="cb" onclick="deqPopBack()">Remove back</button>
+     <div class="csep"></div><button class="cb" onclick="deqReset()">Reset</button>`,
+   canvas:'deq-c',ch:190,log:'deq-log',logDef:'Double-ended queue. Insert and remove from either end freely.',
+   callout:'<strong>Generalizes both:</strong> a deque behaves as a stack (use front only) or a queue (add back, remove front) depending on how you use it.',
+   defaultCode:()=>CODES.deq.pushBack(99),
+   defaultJavaCode:()=>JAVA_CODES.deq.pushBack(99),
+   init:()=>deqDraw()},
+
+  {id:'bag',label:'Bag',icon:'👜',accent:'#e8d050',
+   badge:'unordered · duplicates ok · no index',
+   desc:'A collection where order doesn\'t matter and duplicates are fine. Like reaching into a bag — you get something, but you can\'t choose which one.',
+   under:'Array, linked list',
+   controls:`<span class="clbl">value</span><input class="ci" id="bag-val" type="number" value="7">
+     <button class="cb p" onclick="bagAdd()">Toss in</button>
+     <button class="cb p" onclick="bagRemove()">Grab one</button>
+     <div class="csep"></div><button class="cb" onclick="bagReset()">Reset</button>`,
+   canvas:'bag-c',ch:240,log:'bag-log',logDef:'No order, no index, duplicates fine. Like reaching into a bag.',
+   callout:'<strong>Notice:</strong> there are three 7s in the bag. A Set would reject duplicates; a Bag welcomes them.',
+   defaultCode:()=>CODES.bag.add(7),
+   defaultJavaCode:()=>JAVA_CODES.bag.add(7),
+   init:()=>bagDraw()},
+
+  {id:'set',label:'Set',icon:'⭕',accent:'#5ec460',
+   badge:'unordered · no duplicates · distinct items',
+   desc:'A collection of distinct items — no duplicates allowed. If you try to add something that\'s already there, it\'s silently rejected.',
+   under:'Binary search tree, hash table',
+   controls:`<span class="clbl">value</span><input class="ci" id="set-val" type="number" value="7">
+     <button class="cb p" onclick="setAdd()">Add</button>
+     <button class="cb p" onclick="setRemove()">Remove</button>
+     <div class="csep"></div><button class="cb" onclick="setReset()">Reset</button>`,
+   canvas:'set-c',ch:230,log:'set-log',logDef:'Try adding a duplicate — the set will reject it.',
+   callout:'<strong>Key operation:</strong> "is X in this set?" runs in O(1) average with a hash table, or O(log n) with a BST. Much faster than scanning a list.',
+   defaultCode:()=>CODES.set.add(7),
+   defaultJavaCode:()=>JAVA_CODES.set.add(7),
+   init:()=>setDraw()},
+
+  {id:'pq',label:'Priority Queue',icon:'🏥',accent:'#f07ab0',
+   badge:'ordered by priority · highest served first',
+   desc:'Like a hospital triage room — it\'s not first come first served. The most critical patient is always seen next, regardless of arrival order.',
+   under:'Heap',
+   controls:`<span class="clbl">name</span><input class="ci" id="pq-name" type="text" value="Frank" style="width:80px">
+     <span class="clbl">priority (1-10)</span><input class="ci" id="pq-pri" type="number" value="7" min="1" max="10">
+     <button class="cb p" onclick="pqEnqueue()">Admit</button>
+     <button class="cb p" onclick="pqDequeue()">Call next</button>
+     <div class="csep"></div><button class="cb" onclick="pqReset()">Reset</button>`,
+   canvas:'pq-c',ch:250,log:'pq-log',logDef:'Highest priority is always seen first — regardless of arrival order.',
+   callout:'<strong>Backed by a heap:</strong> the heap\'s rule (parent ≥ children) guarantees the highest-priority item is always at the root — O(1) to peek, O(log n) to insert or remove.',
+   defaultCode:()=>CODES.pq.enqueue('Frank',7),
+   defaultJavaCode:()=>JAVA_CODES.pq.enqueue('Frank',7),
+   init:()=>pqDraw()},
+
+  {id:'dict',label:'Dictionary',icon:'🗄️',accent:'#4f8ef7',
+   badge:'key → value · O(1) lookup · no duplicate keys',
+   desc:'Associates keys with values, like a real dictionary where you look up a word (key) to find its definition (value). Also called a Map.',
+   under:'Hash table, binary search tree',
+   controls:`<span class="clbl">key</span><input class="ci" id="dict-key" type="text" value="name" style="width:80px">
+     <span class="clbl">value</span><input class="ci" id="dict-val2" type="text" value="Jordan" style="width:80px">
+     <button class="cb p" onclick="dictSet()">Set</button>
+     <button class="cb p" onclick="dictGet()">Get</button>
+     <button class="cb p" onclick="dictDelete()">Delete</button>
+     <div class="csep"></div><button class="cb" onclick="dictReset()">Reset</button>`,
+   canvas:'dict-c',ch:230,log:'dict-log',logDef:'Key-value pairs. Look up any value instantly via its key.',
+   callout:'<strong>The key insight:</strong> a dictionary doesn\'t search through values to find one — it uses the key as a direct address (via hashing). That\'s why lookup is O(1) average.',
+   defaultCode:()=>CODES.dict.get('name'),
+   defaultJavaCode:()=>JAVA_CODES.dict.get('name'),
+   init:()=>dictDraw()},
+];
+
+/* ── BUILD DOM ── */
+let current='list';
+function switchTo(id){
+  current=id;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.id===id));
+  document.querySelectorAll('.panel').forEach(el=>el.classList.toggle('active',el.id==='p-'+id));
+  const s=SECTIONS.find(x=>x.id===id);
+  if(s)setTimeout(()=>{s.init();setLog(s.log,s.logDef);if(s.defaultCode)setCodeBoth(s.id,s.defaultCode,s.defaultJavaCode||s.defaultCode);},30);
+  // update accent
+  document.documentElement.style.setProperty('--accent',s?.accent||'#4f8ef7');
+}
+const navEl=document.getElementById('nav');
+const panelsEl=document.getElementById('panels');
+SECTIONS.forEach(s=>{
+  const ni=document.createElement('div');
+  ni.className='nav-item'+(s.id===current?' active':'');
+  ni.dataset.id=s.id;
+  ni.innerHTML=`<span class="nav-icon">${s.icon}</span>${s.label}`;
+  ni.onclick=()=>switchTo(s.id);
+  navEl.appendChild(ni);
+
+  const p=document.createElement('div');
+  p.className='panel'+(s.id===current?' active':'');
+  p.id='p-'+s.id;
+  p.innerHTML=`
+    <div class="ph">
+      <div class="ph-row">
+        <span style="font-size:28px">${s.icon}</span>
+        <h2 class="ph-title">${s.label}</h2>
+        <span class="ph-badge">${s.badge}</span>
+      </div>
+      <p class="ph-desc">${s.desc}</p>
+      <p class="ph-under">Underlying structure: <span>${s.under}</span></p>
+    </div>
+    <div class="ctrls">${s.controls}</div>
+    <div class="scene" id="${s.id}-scene"><canvas id="${s.canvas}"></canvas></div>
+    <div class="log" id="${s.log}">${s.logDef}</div>
+    <div class="callout">${s.callout}</div>
+    <div class="code-block">
+      <div class="code-header"><span>python</span><button class="code-copy" id="${s.id}-copy" onclick="copyCode('${s.id}','py')">copy</button></div>
+      <pre class="code-pre" id="${s.id}-code-pre"><span class="tok-cmt"># perform an action above to see the code</span></pre>
+    </div>
+    <div class="code-block" style="margin-top:8px">
+      <div class="code-header"><span>java</span><button class="code-copy" id="${s.id}-java-copy" onclick="copyCode('${s.id}','java')">copy</button></div>
+      <pre class="code-pre" id="${s.id}-java-pre"><span class="tok-cmt">// perform an action above to see the code</span></pre>
+    </div>`;
+  panelsEl.appendChild(p);
+});
+
+window.addEventListener('load',()=>{
+  const s=SECTIONS.find(x=>x.id===current);
+  if(s){document.documentElement.style.setProperty('--accent',s.accent);s.init();setLog(s.log,s.logDef);if(s.defaultCode)setCodeBoth(s.id,s.defaultCode,s.defaultJavaCode||s.defaultCode);}
+});
+window.addEventListener('resize',()=>{
+  const s=SECTIONS.find(x=>x.id===current);if(s)s.init();
+});
+</script>
+</body>
+</html>
