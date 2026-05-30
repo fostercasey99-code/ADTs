@@ -25,18 +25,19 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 
 /* ── HEADER ── */
 .hdr { padding: 28px 40px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; gap: 16px; }
+.hdr-inner { max-width: 1200px; margin: 0 auto; width: 100%; display: flex; align-items: baseline; gap: 16px; }
 .hdr h1 { font-family: var(--font-head); font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
 .hdr p { font-size: 13px; color: var(--text2); font-style: italic; }
 
 /* ── LAYOUT ── */
-.layout { display: flex; min-height: calc(100vh - 69px); }
+.layout { display: flex; min-height: calc(100vh - 69px); max-width: 1200px; margin: 0 auto; width: 100%; }
 .sidebar { width: 190px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 20px 0; position: sticky; top: 0; height: calc(100vh - 69px); overflow-y: auto; }
 .sidebar-lbl { font-family: var(--font-mono); font-size: 10px; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; padding: 0 18px 10px; }
 .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 18px; cursor: pointer; font-size: 13px; color: var(--text2); border-left: 2px solid transparent; transition: all .15s; user-select: none; font-family: var(--font-head); font-weight: 500; }
 .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
 .nav-item.active { color: var(--text); border-left-color: var(--accent, #4f8ef7); background: rgba(255,255,255,0.04); }
 .nav-icon { font-size: 16px; width: 22px; text-align: center; }
-.main { flex: 1; padding: 36px 44px; max-width: 860px; }
+.main { flex: 1; padding: 36px 44px; min-width: 0; }
 .panel { display: none; } .panel.active { display: block; }
 
 /* ── PANEL HEADER ── */
@@ -75,18 +76,20 @@ canvas { display: block; width: 100%; }
 .log.hi { color: var(--amber); }
 .callout { font-size: 13px; color: var(--text2); background: rgba(79,142,247,0.05); border: 1px solid rgba(79,142,247,0.14); border-left: 3px solid var(--blue); border-radius: var(--r-sm); padding: 10px 14px; margin-top: 14px; line-height: 1.65; }
 .callout strong { color: var(--text); font-weight: 600; }
-.code-block { margin-top: 14px; border-radius: var(--r-sm); overflow: hidden; border: 1px solid var(--border-hi); }
-.code-header { display: flex; align-items: center; justify-content: space-between; padding: 7px 14px; background: rgba(255,255,255,.04); border-bottom: 1px solid var(--border); }
-.code-header span { font-family: var(--font-mono); font-size: 10px; color: var(--text3); letter-spacing: .06em; text-transform: uppercase; }
-.code-copy { font-family: var(--font-mono); font-size: 10px; padding: 2px 8px; border: 1px solid var(--border-hi); border-radius: 4px; background: transparent; color: var(--text3); cursor: pointer; transition: all .15s; }
-.code-copy:hover { color: var(--text); border-color: var(--text2); }
-pre.code-pre { margin: 0; padding: 14px 16px; background: var(--bg3); font-family: var(--font-mono); font-size: 12px; line-height: 1.7; overflow-x: auto; white-space: pre; }
-.tok-kw  { color: #c4adff; }
-.tok-fn  { color: #7de8c8; }
-.tok-str { color: #ffc860; }
-.tok-num { color: #a8c8ff; }
-.tok-cmt { color: #454340; font-style: italic; }
-.tok-var { color: #e8e6df; }
+.methods-panel { margin-top: 14px; border: 1px solid var(--border-hi); border-radius: var(--r-sm); overflow: hidden; }
+.methods-header { padding: 8px 14px; background: rgba(255,255,255,.04); border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-size: 10px; color: var(--text3); letter-spacing: .06em; text-transform: uppercase; }
+.methods-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.method-row { display: flex; flex-direction: column; padding: 10px 14px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); }
+.method-row:nth-child(even) { border-right: none; }
+.method-row:nth-last-child(1), .method-row:nth-last-child(2) { border-bottom: none; }
+.method-sig { font-family: var(--font-mono); font-size: 12px; color: #7de8c8; margin-bottom: 4px; }
+.method-sig .mn { color: #7de8c8; }
+.method-sig .mp { color: #a8c8ff; }
+.method-sig .mr { color: #c4adff; font-style: italic; }
+.method-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.method-badge { font-family: var(--font-mono); font-size: 10px; color: var(--text3); margin-top: 4px; }
+.method-badge.o1 { color: #3ec9a0; }
+.method-badge.on { color: #f0a030; }
 
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
@@ -190,8 +193,7 @@ function listInsert(){
     box(ctx,ghostX,sy,bw,bh,'rgba(62,201,160,.22)','rgba(62,201,160,.7)',val,'#7de8c8');
     ctx.restore();
     if(t<1)listAnim=requestAnimationFrame(frame);
-    else{listData=[...listData.slice(0,idx),val,...listData.slice(idx)];listDraw(listData,[idx]);setLog('list-log',`Inserted ${val} at [${idx}]. List length: ${listData.length}.`);
-      setCodeBoth('list',()=>CODES.list.insert(val,idx),()=>JAVA_CODES.list.insert(val,idx));}
+    else{listData=[...listData.slice(0,idx),val,...listData.slice(idx)];listDraw(listData,[idx]);setLog('list-log',`Inserted ${val} at [${idx}]. List length: ${listData.length}.`);}
   }
   listAnim=requestAnimationFrame(frame);
 }
@@ -218,8 +220,7 @@ function listRemove(){
       box(ctx,x,sy,bw,bh,'rgba(79,142,247,.13)','rgba(79,142,247,.5)',v,'#a8c8ff');
     });
     if(t<1)listAnim=requestAnimationFrame(frame);
-    else{listData=newData;listDraw(listData);setLog('list-log',`Removed ${removed}. List length: ${listData.length}.`);
-  setCodeBoth('list',()=>CODES.list.remove(idx),()=>JAVA_CODES.list.remove(idx));}
+    else{listData=newData;listDraw(listData);setLog('list-log',`Removed ${removed}. List length: ${listData.length}.`);}
   }
   listAnim=requestAnimationFrame(frame);
 }
@@ -280,18 +281,15 @@ function dynPush(){
         txt(ctx,x+bw/2,46+bh+14,String(i),10,'#454340');
       }
       if(t<1)dynAnim=requestAnimationFrame(frame);
-      else{dynData.push(val);dynDraw(dynData.length-1);setLog('dyn-log',`Resized to ${dynCap}. Added ${val} at index ${dynData.length-1}.`);
-      setCodeBoth('dyn',()=>CODES.dyn.push(val),()=>JAVA_CODES.dyn.push(val));}
+      else{dynData.push(val);dynDraw(dynData.length-1);setLog('dyn-log',`Resized to ${dynCap}. Added ${val} at index ${dynData.length-1}.`);}
     }
     dynAnim=requestAnimationFrame(frame);
   }else{
     dynData.push(val);dynDraw(dynData.length-1);
     setLog('dyn-log',`Pushed ${val} at index ${dynData.length-1}. ${dynCap-dynData.length} slot(s) remaining.`);
-  setCodeBoth('dyn',()=>CODES.dyn.push(val),()=>JAVA_CODES.dyn.push(val));
   }
 }
-function dynPop(){if(!dynData.length)return;const v=dynData.pop();dynDraw();setLog('dyn-log',`Popped ${v}. Size: ${dynData.length}.`);
-  setCodeBoth('dyn',()=>CODES.dyn.pop(),()=>JAVA_CODES.dyn.pop());}
+function dynPop(){if(!dynData.length)return;const v=dynData.pop();dynDraw();setLog('dyn-log',`Popped ${v}. Size: ${dynData.length}.`);}
 function dynReset(){if(dynAnim)cancelAnimationFrame(dynAnim);dynData=[10,20,30];dynCap=6;dynDraw();setLog('dyn-log','Backed by an array. Capacity doubles automatically when full.');}
 
 /* ════════════════════════════════
@@ -351,8 +349,7 @@ function stackPush(){
     box(ctx,sx,ghostY,pw,ph,'rgba(62,201,160,.22)','rgba(62,201,160,.7)',val,'#7de8c8',8,1.5);
     ctx.restore();
     if(t<1)stackAnim=requestAnimationFrame(frame);
-    else{stackData.push(val);stackDraw(true);setLog('stack-log',`Pushed ${val} onto the top. Stack size: ${stackData.length}.`);
-      setCodeBoth('stack',()=>CODES.stack.push(val),()=>JAVA_CODES.stack.push(val));}
+    else{stackData.push(val);stackDraw(true);setLog('stack-log',`Pushed ${val} onto the top. Stack size: ${stackData.length}.`);}
   }
   setLog('stack-log',`Pushing ${val} onto the top…`,true);
   stackAnim=requestAnimationFrame(frame);
@@ -382,8 +379,7 @@ function stackPop(){
     box(ctx,sx,lerp(topY,topY-70,t),pw,ph,'rgba(240,96,80,.2)','rgba(240,96,80,.7)',topVal,'#ff9a90',8,1.5);
     ctx.restore();
     if(t<1)stackAnim=requestAnimationFrame(frame);
-    else{stackData.pop();stackDraw();setLog('stack-log',`Popped ${topVal} off the top. Stack size: ${stackData.length}.`);
-    setCodeBoth('stack',()=>CODES.stack.pop(),()=>JAVA_CODES.stack.pop());}
+    else{stackData.pop();stackDraw();setLog('stack-log',`Popped ${topVal} off the top. Stack size: ${stackData.length}.`);}
   }
   setLog('stack-log',`Popping ${topVal} off the top…`,true);
   stackAnim=requestAnimationFrame(frame);
@@ -436,7 +432,6 @@ function qEnqueue(){
   const name=document.getElementById('q-val').value.trim()||names[Math.floor(Math.random()*names.length)];
   queueData.push(name);qDraw(false,true);
   setLog('queue-log',`${name} joined the back of the line. Queue length: ${queueData.length}.`,true);
-  setCodeBoth('queue',()=>CODES.queue.enqueue(name),()=>JAVA_CODES.queue.enqueue(name));
   setTimeout(()=>qDraw(),600);
 }
 function qDequeue(){
@@ -444,7 +439,6 @@ function qDequeue(){
   const name=queueData[0];
   qDraw(true,false);
   setLog('queue-log',`${name} reached the front and gets served! ☕ Queue length: ${queueData.length-1}.`,true);
-  setCodeBoth('queue',()=>CODES.queue.dequeue(),()=>JAVA_CODES.queue.dequeue());
   setTimeout(()=>{queueData.shift();qDraw();},600);
 }
 function qReset(){queueData=['Alice','Bob','Carol','Dave'];qEmojiMap={};qDraw();setLog('queue-log','First In First Out — join the back, served from the front. Just like a real line.');}
@@ -495,14 +489,10 @@ function deqDraw(hiFront=false,hiBack=false){
   });
   txt(ctx,W/2,H-4,'← front (purple)   back (red) →',9,'#2a2a28');
 }
-function deqPushFront(){const v=parseInt(document.getElementById('deq-val').value)||0;dequeData.unshift(v);deqDraw(true,false);setLog('deq-log',`Added ${v} to the FRONT. Deque: [${dequeData.join(', ')}]`,true);
-  setCodeBoth('deq',()=>CODES.deq.pushFront(v),()=>JAVA_CODES.deq.pushFront(v));setTimeout(()=>deqDraw(),500);}
-function deqPushBack(){const v=parseInt(document.getElementById('deq-val').value)||0;dequeData.push(v);deqDraw(false,true);setLog('deq-log',`Added ${v} to the BACK. Deque: [${dequeData.join(', ')}]`,true);
-  setCodeBoth('deq',()=>CODES.deq.pushBack(v),()=>JAVA_CODES.deq.pushBack(v));setTimeout(()=>deqDraw(),500);}
-function deqPopFront(){if(!dequeData.length)return;const v=dequeData.shift();deqDraw();setLog('deq-log',`Removed ${v} from the FRONT. Deque: [${dequeData.join(', ')}]`);
-  setCodeBoth('deq',()=>CODES.deq.popFront(),()=>JAVA_CODES.deq.popFront());}
-function deqPopBack(){if(!dequeData.length)return;const v=dequeData.pop();deqDraw();setLog('deq-log',`Removed ${v} from the BACK. Deque: [${dequeData.join(', ')}]`);
-  setCodeBoth('deq',()=>CODES.deq.popBack(),()=>JAVA_CODES.deq.popBack());}
+function deqPushFront(){const v=parseInt(document.getElementById('deq-val').value)||0;dequeData.unshift(v);deqDraw(true,false);setLog('deq-log',`Added ${v} to the FRONT. Deque: [${dequeData.join(', ')}]`,true);setTimeout(()=>deqDraw(),500);}
+function deqPushBack(){const v=parseInt(document.getElementById('deq-val').value)||0;dequeData.push(v);deqDraw(false,true);setLog('deq-log',`Added ${v} to the BACK. Deque: [${dequeData.join(', ')}]`,true);setTimeout(()=>deqDraw(),500);}
+function deqPopFront(){if(!dequeData.length)return;const v=dequeData.shift();deqDraw();setLog('deq-log',`Removed ${v} from the FRONT. Deque: [${dequeData.join(', ')}]`);}
+function deqPopBack(){if(!dequeData.length)return;const v=dequeData.pop();deqDraw();setLog('deq-log',`Removed ${v} from the BACK. Deque: [${dequeData.join(', ')}]`);}
 function deqReset(){dequeData=[40,10,25,15,35];deqDraw();setLog('deq-log','Double-ended queue. Insert and remove from either end freely.');}
 
 /* ════════════════════════════════
@@ -548,10 +538,8 @@ function bagDraw(newItem=null){
   // count badge
   box(ctx,cx-24,H-28,48,22,'rgba(240,160,48,.18)','rgba(240,160,48,.5)',`${bagData.length} items`,'#ffc860',6);
 }
-function bagAdd(){const v=parseInt(document.getElementById('bag-val').value)||Math.floor(Math.random()*20)+1;bagData.push(v);bagDraw(v);setLog('bag-log',`Added ${v} to the bag. ${bagData.length} items total. Notice: no particular order!`,true);
-  setCodeBoth('bag',()=>CODES.bag.add(v),()=>JAVA_CODES.bag.add(v));setTimeout(()=>bagDraw(),400);}
-function bagRemove(){if(!bagData.length)return;const i=Math.floor(Math.random()*bagData.length);const v=bagData.splice(i,1)[0];bagDraw();setLog('bag-log',`Removed a ${v}. Order doesn't matter — could be any item.`);
-  setCodeBoth('bag',()=>CODES.bag.remove(),()=>JAVA_CODES.bag.remove());}
+function bagAdd(){const v=parseInt(document.getElementById('bag-val').value)||Math.floor(Math.random()*20)+1;bagData.push(v);bagDraw(v);setLog('bag-log',`Added ${v} to the bag. ${bagData.length} items total. Notice: no particular order!`,true);setTimeout(()=>bagDraw(),400);}
+function bagRemove(){if(!bagData.length)return;const i=Math.floor(Math.random()*bagData.length);const v=bagData.splice(i,1)[0];bagDraw();setLog('bag-log',`Removed a ${v}. Order doesn't matter — could be any item.`);}
 function bagReset(){bagData=[7,3,7,12,5,7,2,9];bagDraw();setLog('bag-log','No order, no index, duplicates fine. Like reaching into a bag.');}
 
 /* ════════════════════════════════
@@ -592,14 +580,11 @@ function setDraw(flash=null,duplicate=false){
 }
 function setAdd(){
   const v=parseInt(document.getElementById('set-val').value)||0;
-  if(setData.has(v)){setDraw(v,true);setLog('set-log',`${v} already exists in the set — rejected! Sets only hold distinct items.`,true);
-  setCodeBoth('set',()=>CODES.set.reject(v),()=>JAVA_CODES.set.reject(v));setTimeout(()=>setDraw(v,false),800);return;}
+  if(setData.has(v)){setDraw(v,true);setLog('set-log',`${v} already exists in the set — rejected! Sets only hold distinct items.`,true);setTimeout(()=>setDraw(v,false),800);return;}
   setData.add(v);setDraw(v,false);setLog('set-log',`Added ${v}. Set size: ${setData.size}.`,true);
-  setCodeBoth('set',()=>CODES.set.add(v),()=>JAVA_CODES.set.add(v));
   setTimeout(()=>setDraw(),500);
 }
-function setRemove(){const v=parseInt(document.getElementById('set-val').value)||0;if(!setData.has(v)){setLog('set-log',`${v} is not in the set.`);return;}setData.delete(v);setDraw();setLog('set-log',`Removed ${v}. Set size: ${setData.size}.`);
-  setCodeBoth('set',()=>CODES.set.remove(v),()=>JAVA_CODES.set.remove(v));}
+function setRemove(){const v=parseInt(document.getElementById('set-val').value)||0;if(!setData.has(v)){setLog('set-log',`${v} is not in the set.`);return;}setData.delete(v);setDraw();setLog('set-log',`Removed ${v}. Set size: ${setData.size}.`);}
 function setReset(){setData=new Set([3,7,12,5,9,1]);setDraw();setLog('set-log','Try adding a duplicate — the set will reject it.');}
 
 /* ════════════════════════════════
@@ -641,10 +626,8 @@ function pqEnqueue(){
   pqData.push({name,pri});pqSort();pqDraw();
   const pos=pqData.findIndex(p=>p.name===name&&p.pri===pri);
   setLog('pq-log',`${name} (priority ${pri}) added. They are #${pos+1} in line — ${URGENCY[pri]}.`,true);
-  setCodeBoth('pq',()=>CODES.pq.enqueue(name,pri),()=>JAVA_CODES.pq.enqueue(name,pri));
 }
-function pqDequeue(){if(!pqData.length)return;pqSort();const p=pqData.shift();pqDraw();setLog('pq-log',`${p.name} (priority ${p.pri}) is called — ${URGENCY[p.pri]}. ${pqData.length} remaining.`,true);
-  setCodeBoth('pq',()=>CODES.pq.dequeue(),()=>JAVA_CODES.pq.dequeue());}
+function pqDequeue(){if(!pqData.length)return;pqSort();const p=pqData.shift();pqDraw();setLog('pq-log',`${p.name} (priority ${p.pri}) is called — ${URGENCY[p.pri]}. ${pqData.length} remaining.`,true);}
 function pqReset(){pqData=[{name:'Alice',pri:3},{name:'Bob',pri:8},{name:'Carol',pri:5},{name:'Dave',pri:10},{name:'Eve',pri:1}];pqDraw();setLog('pq-log','Highest priority is always seen first — regardless of arrival order.');}
 
 /* ════════════════════════════════
@@ -684,271 +667,23 @@ function dictSet(){
   if(!k||!v)return;
   const isNew=!(k in dictData);dictData[k]=v;dictDraw(k);
   setLog('dict-log',`${isNew?'Added new':'Updated'} key "${k}" → "${v}". Dictionary size: ${Object.keys(dictData).length}.`,true);
-  setCodeBoth('dict',()=>CODES.dict.set(k,v),()=>JAVA_CODES.dict.set(k,v));
   setTimeout(()=>dictDraw(),500);
 }
 function dictGet(){
   const k=document.getElementById('dict-key').value.trim();
-  if(k in dictData){dictDraw(k);setLog('dict-log',`dict["${k}"] → "${dictData[k]}". Direct O(1) lookup — no searching needed.`,true);
-  setCodeBoth('dict',()=>CODES.dict.get(k),()=>JAVA_CODES.dict.get(k));setTimeout(()=>dictDraw(),800);}
+  if(k in dictData){dictDraw(k);setLog('dict-log',`dict["${k}"] → "${dictData[k]}". Direct O(1) lookup — no searching needed.`,true);setTimeout(()=>dictDraw(),800);}
   else setLog('dict-log',`Key "${k}" not found in dictionary.`);
 }
 function dictDelete(){
   const k=document.getElementById('dict-key').value.trim();
   if(!(k in dictData)){setLog('dict-log',`Key "${k}" not found.`);return;}
   delete dictData[k];dictDraw();setLog('dict-log',`Deleted key "${k}". Dictionary size: ${Object.keys(dictData).length}.`);
-  setCodeBoth('dict',()=>CODES.dict.delete(k),()=>JAVA_CODES.dict.delete(k));
 }
 function dictReset(){dictData={name:'Casey',major:'CS',year:'2025',gpa:'3.8'};dictDraw();setLog('dict-log','Key-value pairs. Look up any value instantly via its key.');}
 
 /* ════════════════════════════════
    SECTIONS
 ════════════════════════════════ */
-/* ── CODE SNIPPETS ── */
-function h(cls,t){return`<span class="tok-${cls}">${t}</span>`;}
-const kw=t=>h('kw',t), fn=t=>h('fn',t), st=t=>h('str',`"${t}"`), num=t=>h('num',t), cmt=t=>h('cmt',`# ${t}`), v=t=>h('var',t);
-
-const CODES = {
-  list: {
-    insert: (val,idx) => `${cmt('insert into a List')}
-${v('my_list')} = [3, 7, 1, 9, 4]
-${v('my_list')}.${fn('insert')}(${num(idx)}, ${num(val)})   ${cmt(`shifts items right from index ${idx}`)}
-${cmt(`result: ${[3,7,1,9,4].slice(0,idx).concat([val]).concat([3,7,1,9,4].slice(idx)).join(', ')}`)}`,
-    remove: (idx) => `${cmt('remove from a List by index')}
-${v('my_list')} = [3, 7, 1, 9, 4]
-${v('removed')} = ${v('my_list')}.${fn('pop')}(${num(idx)})   ${cmt(`removes item at index ${idx}`)}
-${cmt('items after it shift left to fill the gap')}`,
-  },
-  dyn: {
-    push: (val) => `${cmt('append to a dynamic array (Python list)')}
-${v('arr')} = [10, 20, 30]
-${v('arr')}.${fn('append')}(${num(val)})       ${cmt('O(1) amortized — may trigger resize')}
-${cmt('if capacity was full, a new array 2× bigger')}
-${cmt('is allocated and all items are copied over')}`,
-    pop: () => `${cmt('remove last item from dynamic array')}
-${v('arr')} = [10, 20, 30]
-${v('last')} = ${v('arr')}.${fn('pop')}()      ${cmt('O(1) — removes from end, no shifting')}`,
-  },
-  stack: {
-    push: (val) => `${cmt('push onto a stack')}
-${v('stack')} = []
-${v('stack')}.${fn('append')}(${num(val)})     ${cmt('adds to the top')}
-${cmt(`top is now: ${val}`)}`,
-    pop: () => `${cmt('pop from a stack')}
-${v('stack')} = [5, 12, 8, 3]
-${v('top')} = ${v('stack')}.${fn('pop')}()     ${cmt('removes & returns top item')}
-${cmt('only the top is ever accessible')}`,
-  },
-  queue: {
-    enqueue: (name) => `${kw('from')} collections ${kw('import')} deque
-${v('queue')} = deque([${st('Alice')}, ${st('Bob')}])
-${v('queue')}.${fn('append')}(${st(name)})  ${cmt('join at the back')}
-${cmt(`queue is now: ${['Alice','Bob',name].join(', ')}`)}`,
-    dequeue: () => `${kw('from')} collections ${kw('import')} deque
-${v('queue')} = deque([${st('Alice')}, ${st('Bob')}, ${st('Carol')}])
-${v('served')} = ${v('queue')}.${fn('popleft')}()  ${cmt('served from the front')}
-${cmt("served: 'Alice' — first in, first out")}`,
-  },
-  deq: {
-    pushFront: (val) => `${kw('from')} collections ${kw('import')} deque
-${v('dq')} = deque([40, 10, 25])
-${v('dq')}.${fn('appendleft')}(${num(val)})  ${cmt('add to front')}`,
-    pushBack: (val) => `${kw('from')} collections ${kw('import')} deque
-${v('dq')} = deque([40, 10, 25])
-${v('dq')}.${fn('append')}(${num(val)})      ${cmt('add to back')}`,
-    popFront: () => `${kw('from')} collections ${kw('import')} deque
-${v('dq')} = deque([40, 10, 25])
-${v('val')} = ${v('dq')}.${fn('popleft')}()  ${cmt('remove from front')}`,
-    popBack: () => `${kw('from')} collections ${kw('import')} deque
-${v('dq')} = deque([40, 10, 25])
-${v('val')} = ${v('dq')}.${fn('pop')}()      ${cmt('remove from back')}`,
-  },
-  bag: {
-    add: (val) => `${cmt('a Bag is just a list that allows duplicates')}
-${v('bag')} = [7, 3, 7, 12, 5]
-${v('bag')}.${fn('append')}(${num(val)})     ${cmt('order does not matter')}
-${cmt(`bag now has ${val} — duplicates welcome`)}`,
-    remove: () => `${kw('import')} random
-${v('bag')} = [7, 3, 7, 12, 5]
-${v('item')} = random.${fn('choice')}(${v('bag')})   ${cmt('grab any item')}
-${v('bag')}.${fn('remove')}(${v('item')})            ${cmt('removes first occurrence')}`,
-  },
-  set: {
-    add: (val) => `${v('my_set')} = {3, 7, 12, 5, 9}
-${v('my_set')}.${fn('add')}(${num(val)})     ${cmt('ignored if already present')}
-${cmt(`set is now: {3, 5, 7, 9, 12, ${val}} (auto-sorted)`)}`,
-    reject: (val) => `${v('my_set')} = {3, 7, 12, 5, 9}
-${v('my_set')}.${fn('add')}(${num(val)})     ${cmt(`${val} already in set — silently ignored`)}
-${cmt('no error, no duplicate — set unchanged')}`,
-    remove: (val) => `${v('my_set')} = {3, 7, 12, 5, 9}
-${v('my_set')}.${fn('discard')}(${num(val)})  ${cmt('removes if present, no error if not')}`,
-  },
-  pq: {
-    enqueue: (name, pri) => `${kw('import')} heapq
-${v('pq')} = []
-${cmt('store as (-priority, name) — heapq is a min-heap')}
-${cmt('so we negate priority to get max-heap behavior')}
-heapq.${fn('heappush')}(${v('pq')}, (${num(-pri)}, ${st(name)}))
-${cmt(`${name} (priority ${pri}) added and sorted in`)}`,
-    dequeue: () => `${kw('import')} heapq
-${v('pq')} = [(-10, ${st('Dave')}), (-8, ${st('Bob')}), (-5, ${st('Carol')})]
-${v('pri')}, ${v('name')} = heapq.${fn('heappop')}(${v('pq')})
-${cmt('always pops the highest priority item')}
-${cmt('result: Dave (priority 10)')}`,
-  },
-  dict: {
-    set: (key, val) => `${v('student')} = {${st('name')}: ${st('Casey')}, ${st('gpa')}: ${st('3.8')}}
-${v('student')}[${st(key)}] = ${st(val)}   ${cmt('O(1) average — hash lookup')}`,
-    get: (key) => `${v('student')} = {${st('name')}: ${st('Casey')}, ${st('gpa')}: ${st('3.8')}}
-${v('value')} = ${v('student')}[${st(key)}]  ${cmt('O(1) — no searching')}
-${cmt(`result: "${({name:'Casey',major:'CS',year:'2025',gpa:'3.8'}[key]||'...')}"`)}`,
-    delete: (key) => `${v('student')} = {${st('name')}: ${st('Casey')}, ${st('gpa')}: ${st('3.8')}}
-${kw('del')} ${v('student')}[${st(key)}]      ${cmt('removes key-value pair')}`,
-  },
-};
-
-function setCode(panelId, snippetFn){
-  const el=document.getElementById(panelId+'-code-pre');
-  if(el) el.innerHTML=snippetFn();
-}
-function setCodeBoth(panelId, pyFn, javaFn){
-  const el=document.getElementById(panelId+'-code-pre');
-  if(el) el.innerHTML=pyFn();
-  const jel=document.getElementById(panelId+'-java-pre');
-  if(jel) jel.innerHTML=javaFn();
-}
-function copyCode(panelId, lang){
-  const id = lang==='java' ? panelId+'-java-pre' : panelId+'-code-pre';
-  const el=document.getElementById(id);
-  if(!el)return;
-  const btnId = lang==='java' ? panelId+'-java-copy' : panelId+'-copy';
-  navigator.clipboard.writeText(el.innerText).then(()=>{
-    const btn=document.getElementById(btnId);
-    if(btn){const orig=btn.textContent;btn.textContent='copied!';setTimeout(()=>btn.textContent=orig,1200);}
-  });
-}
-
-const JAVA_CODES = {
-  list: {
-    insert: (val,idx) => `${h('cmt','// insert into a List (ArrayList)')}
-${h('kw','import')} java.util.ArrayList;
-ArrayList&lt;Integer&gt; list = ${h('kw','new')} ArrayList&lt;&gt;();
-list.${h('fn','add')}(${h('num','3')}); list.${h('fn','add')}(${h('num','7')}); list.${h('fn','add')}(${h('num','1')});
-list.${h('fn','add')}(${h('num',idx)}, ${h('num',val)});   ${h('cmt',`// inserts ${val} at index ${idx}, shifts right`)}`,
-    remove: (idx) => `${h('cmt','// remove from a List by index')}
-${h('kw','import')} java.util.ArrayList;
-ArrayList&lt;Integer&gt; list = ${h('kw','new')} ArrayList&lt;&gt;();
-${h('kw','int')} removed = list.${h('fn','remove')}(${h('num',idx)});  ${h('cmt',`// removes index ${idx}, items shift left`)}`,
-  },
-  dyn: {
-    push: (val) => `${h('cmt','// ArrayList grows automatically (dynamic array)')}
-${h('kw','import')} java.util.ArrayList;
-ArrayList&lt;Integer&gt; arr = ${h('kw','new')} ArrayList&lt;&gt;();
-arr.${h('fn','add')}(${h('num',val)});   ${h('cmt','// O(1) amortized — resizes internally when full')}
-${h('cmt','// Java doubles capacity and copies on resize')}`,
-    pop: () => `${h('cmt','// remove last element from ArrayList')}
-ArrayList&lt;Integer&gt; arr = ${h('kw','new')} ArrayList&lt;&gt;();
-${h('kw','int')} last = arr.${h('fn','remove')}(arr.${h('fn','size')}() - ${h('num','1')});  ${h('cmt','// O(1)')}`,
-  },
-  stack: {
-    push: (val) => `${h('cmt','// push onto a Stack')}
-${h('kw','import')} java.util.Stack;
-Stack&lt;Integer&gt; stack = ${h('kw','new')} Stack&lt;&gt;();
-stack.${h('fn','push')}(${h('num',val)});   ${h('cmt','// adds to the top')}
-${h('cmt',`// top is now: ${val}`)}`,
-    pop: () => `${h('cmt','// pop from a Stack')}
-${h('kw','import')} java.util.Stack;
-Stack&lt;Integer&gt; stack = ${h('kw','new')} Stack&lt;&gt;();
-${h('kw','int')} top = stack.${h('fn','pop')}();   ${h('cmt','// removes and returns top')}
-${h('cmt','// peek() lets you look without removing')}`,
-  },
-  queue: {
-    enqueue: (name) => `${h('cmt','// enqueue — add to back of Queue')}
-${h('kw','import')} java.util.LinkedList;
-${h('kw','import')} java.util.Queue;
-Queue&lt;String&gt; queue = ${h('kw','new')} LinkedList&lt;&gt;();
-queue.${h('fn','offer')}(${h('str',name)});   ${h('cmt','// joins at the back')}`,
-    dequeue: () => `${h('cmt','// dequeue — serve from front of Queue')}
-${h('kw','import')} java.util.LinkedList;
-${h('kw','import')} java.util.Queue;
-Queue&lt;String&gt; queue = ${h('kw','new')} LinkedList&lt;&gt;();
-String served = queue.${h('fn','poll')}();  ${h('cmt','// removes and returns front')}
-${h('cmt','// peek() returns front without removing')}`,
-  },
-  deq: {
-    pushFront: (val) => `${h('cmt','// add to front of Deque')}
-${h('kw','import')} java.util.ArrayDeque;
-ArrayDeque&lt;Integer&gt; dq = ${h('kw','new')} ArrayDeque&lt;&gt;();
-dq.${h('fn','addFirst')}(${h('num',val)});   ${h('cmt','// O(1)')}`,
-    pushBack: (val) => `${h('cmt','// add to back of Deque')}
-${h('kw','import')} java.util.ArrayDeque;
-ArrayDeque&lt;Integer&gt; dq = ${h('kw','new')} ArrayDeque&lt;&gt;();
-dq.${h('fn','addLast')}(${h('num',val)});    ${h('cmt','// O(1)')}`,
-    popFront: () => `${h('cmt','// remove from front of Deque')}
-${h('kw','import')} java.util.ArrayDeque;
-ArrayDeque&lt;Integer&gt; dq = ${h('kw','new')} ArrayDeque&lt;&gt;();
-${h('kw','int')} val = dq.${h('fn','removeFirst')}();  ${h('cmt','// O(1)')}`,
-    popBack: () => `${h('cmt','// remove from back of Deque')}
-${h('kw','import')} java.util.ArrayDeque;
-ArrayDeque&lt;Integer&gt; dq = ${h('kw','new')} ArrayDeque&lt;&gt;();
-${h('kw','int')} val = dq.${h('fn','removeLast')}();   ${h('cmt','// O(1)')}`,
-  },
-  bag: {
-    add: (val) => `${h('cmt','// Bag — no built-in, use ArrayList (allows duplicates)')}
-${h('kw','import')} java.util.ArrayList;
-ArrayList&lt;Integer&gt; bag = ${h('kw','new')} ArrayList&lt;&gt;();
-bag.${h('fn','add')}(${h('num',val)});   ${h('cmt','// order not guaranteed, duplicates welcome')}`,
-    remove: () => `${h('cmt','// remove a random item from the Bag')}
-${h('kw','import')} java.util.Random;
-${h('kw','int')} idx = ${h('kw','new')} Random().${h('fn','nextInt')}(bag.${h('fn','size')}());
-bag.${h('fn','remove')}(idx);   ${h('cmt','// removes item at random index')}`,
-  },
-  set: {
-    add: (val) => `${h('cmt','// add to a Set (rejects duplicates)')}
-${h('kw','import')} java.util.HashSet;
-HashSet&lt;Integer&gt; set = ${h('kw','new')} HashSet&lt;&gt;();
-set.${h('fn','add')}(${h('num',val)});   ${h('cmt','// ignored if already present')}`,
-    reject: (val) => `${h('cmt',`// ${val} already in set — silently ignored`)}
-${h('kw','import')} java.util.HashSet;
-HashSet&lt;Integer&gt; set = ${h('kw','new')} HashSet&lt;&gt;();
-set.${h('fn','add')}(${h('num',val)});   ${h('cmt','// no exception, no duplicate added')}
-${h('kw','boolean')} added = set.${h('fn','add')}(${h('num',val)});  ${h('cmt','// returns false')}`,
-    remove: (val) => `${h('cmt','// remove from a Set')}
-${h('kw','import')} java.util.HashSet;
-HashSet&lt;Integer&gt; set = ${h('kw','new')} HashSet&lt;&gt;();
-set.${h('fn','remove')}(${h('num',val)});   ${h('cmt','// no error if not present')}`,
-  },
-  pq: {
-    enqueue: (name, pri) => `${h('cmt','// PriorityQueue — highest priority first')}
-${h('kw','import')} java.util.PriorityQueue;
-${h('cmt','// use Comparator to make it a max-heap by priority')}
-PriorityQueue&lt;int[]&gt; pq = ${h('kw','new')} PriorityQueue&lt;&gt;(
-  (a, b) -&gt; b[${h('num','0')}] - a[${h('num','0')}]
-);
-pq.${h('fn','offer')}(${h('kw','new')} ${h('kw','int')}[]{${h('num',pri)}});  ${h('cmt',`// priority ${pri} — higher = sooner`)}`,
-    dequeue: () => `${h('cmt','// poll — removes highest priority item')}
-${h('kw','import')} java.util.PriorityQueue;
-PriorityQueue&lt;int[]&gt; pq = ${h('kw','new')} PriorityQueue&lt;&gt;(
-  (a, b) -&gt; b[${h('num','0')}] - a[${h('num','0')}]
-);
-${h('kw','int')}[] next = pq.${h('fn','poll')}();  ${h('cmt','// always the highest priority')}`,
-  },
-  dict: {
-    set: (key, val) => `${h('cmt','// put key-value pair into a HashMap')}
-${h('kw','import')} java.util.HashMap;
-HashMap&lt;String, String&gt; map = ${h('kw','new')} HashMap&lt;&gt;();
-map.${h('fn','put')}(${h('str',key)}, ${h('str',val)});   ${h('cmt','// O(1) average')}`,
-    get: (key) => `${h('cmt','// get value by key from HashMap')}
-${h('kw','import')} java.util.HashMap;
-HashMap&lt;String, String&gt; map = ${h('kw','new')} HashMap&lt;&gt;();
-String val = map.${h('fn','get')}(${h('str',key)});  ${h('cmt','// O(1) — no searching')}`,
-    delete: (key) => `${h('cmt','// remove a key from HashMap')}
-${h('kw','import')} java.util.HashMap;
-HashMap&lt;String, String&gt; map = ${h('kw','new')} HashMap&lt;&gt;();
-map.${h('fn','remove')}(${h('str',key)});   ${h('cmt','// O(1) average')}`,
-  },
-};
-
 const SECTIONS=[
   {id:'list',label:'List',icon:'📋',accent:'#4f8ef7',
    badge:'ordered · indexed · duplicates ok',
@@ -961,8 +696,51 @@ const SECTIONS=[
      <div class="csep"></div><button class="cb" onclick="listReset()">Reset</button>`,
    canvas:'list-c',ch:150,log:'list-log',logDef:'An ordered collection. Items have indices. Duplicates allowed.',
    callout:'<strong>vs. Dynamic Array:</strong> a List is the abstract idea — you can\'t do indexed access in O(1) unless the underlying structure supports it. Arrays give you that; linked lists don\'t.',
-   defaultCode:()=>CODES.list.insert(42,2),
-   defaultJavaCode:()=>JAVA_CODES.list.insert(42,2),
+   methodsHtml:`<div class="methods-panel">
+      <div class="methods-header">Java methods</div>
+      <div class="methods-grid">
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">add</span>(<span class="mp">int index, E element</span>) → <span class="mr">void</span></div>
+        <div class="method-desc">Inserts element at the given index. Everything to the right shifts one position.</div>
+        <div class="method-badge o1">O(n) — shifting required</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">add</span>(<span class="mp">E element</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Appends element to the end of the list.</div>
+        <div class="method-badge o1">O(1) amortized</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">get</span>(<span class="mp">int index</span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Returns the element at the given index without removing it.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">remove</span>(<span class="mp">int index</span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Removes and returns element at the given index. Remaining elements shift left.</div>
+        <div class="method-badge on">O(n) — shifting required</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">set</span>(<span class="mp">int index, E element</span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Replaces element at index with new value. Returns the old value.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">size</span>(<span class="mp"></span>) → <span class="mr">int</span></div>
+        <div class="method-desc">Returns the number of elements currently in the list.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">contains</span>(<span class="mp">Object o</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Returns true if the list contains the specified element.</div>
+        <div class="method-badge on">O(n) — linear scan</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">indexOf</span>(<span class="mp">Object o</span>) → <span class="mr">int</span></div>
+        <div class="method-desc">Returns the index of the first occurrence, or -1 if not found.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      </div>
+    </div>`,
    init:()=>listDraw(listData)},
 
   {id:'dyn',label:'Dynamic Array',icon:'📦',accent:'#3ec9a0',
@@ -975,8 +753,51 @@ const SECTIONS=[
      <div class="csep"></div><button class="cb" onclick="dynReset()">Reset</button>`,
    canvas:'dyn-c',ch:170,log:'dyn-log',logDef:'Watch capacity double when the array gets full.',
    callout:'<strong>The doubling trick:</strong> copying is O(n) but it happens rarely enough that the average cost per push is still O(1). This is called amortized O(1).',
-   defaultCode:()=>CODES.dyn.push(50),
-   defaultJavaCode:()=>JAVA_CODES.dyn.push(50),
+   methodsHtml:`<div class="methods-panel">
+      <div class="methods-header">Java methods</div>
+      <div class="methods-grid">
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">add</span>(<span class="mp">E element</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Appends to end. If capacity is full, a new array 2× bigger is allocated and all items copied.</div>
+        <div class="method-badge o1">O(1) amortized</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">add</span>(<span class="mp">int index, E element</span>) → <span class="mr">void</span></div>
+        <div class="method-desc">Inserts at index — elements shift right. May also trigger a resize.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">get</span>(<span class="mp">int index</span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Direct indexed access. No traversal needed — goes straight to that slot.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">remove</span>(<span class="mp">int index</span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Removes element at index, shifts remaining elements left.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">size</span>(<span class="mp"></span>) → <span class="mr">int</span></div>
+        <div class="method-desc">Number of elements currently stored (not the capacity).</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">trimToSize</span>(<span class="mp"></span>) → <span class="mr">void</span></div>
+        <div class="method-desc">Shrinks the internal array down to exactly match the current size. Frees unused memory.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">ensureCapacity</span>(<span class="mp">int minCapacity</span>) → <span class="mr">void</span></div>
+        <div class="method-desc">Pre-allocates space so future adds don't trigger repeated resizes.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">clear</span>(<span class="mp"></span>) → <span class="mr">void</span></div>
+        <div class="method-desc">Removes all elements. Size becomes 0.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      </div>
+    </div>`,
    init:()=>dynDraw()},
 
   {id:'stack',label:'Stack',icon:'🍽️',accent:'#f0a030',
@@ -989,8 +810,41 @@ const SECTIONS=[
      <div class="csep"></div><button class="cb" onclick="stackReset()">Reset</button>`,
    canvas:'stack-c',ch:240,log:'stack-log',logDef:'Only the TOP is accessible. Push adds, pop removes — both from the top.',
    callout:'<strong>Used in:</strong> undo/redo, function call history (the call stack!), DFS, expression parsing.',
-   defaultCode:()=>CODES.stack.push(99),
-   defaultJavaCode:()=>JAVA_CODES.stack.push(99),
+   methodsHtml:`<div class="methods-panel">
+      <div class="methods-header">Java methods</div>
+      <div class="methods-grid">
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">push</span>(<span class="mp">E item</span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Pushes item onto the top of the stack. This is the only valid insertion point.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">pop</span>(<span class="mp"></span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Removes and returns the top item. Throws EmptyStackException if empty.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">peek</span>(<span class="mp"></span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Returns the top item without removing it. Useful for checking without committing.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">isEmpty</span>(<span class="mp"></span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Returns true if the stack has no elements. Always check before pop/peek.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">size</span>(<span class="mp"></span>) → <span class="mr">int</span></div>
+        <div class="method-desc">Returns how many items are on the stack.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">search</span>(<span class="mp">Object o</span>) → <span class="mr">int</span></div>
+        <div class="method-desc">Returns 1-based position from top. Returns -1 if not found.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      </div>
+    </div>`,
    init:()=>stackDraw()},
 
   {id:'queue',label:'Queue',icon:'☕',accent:'#9f7ef7',
@@ -1003,8 +857,46 @@ const SECTIONS=[
      <div class="csep"></div><button class="cb" onclick="qReset()">Reset</button>`,
    canvas:'queue-c',ch:200,log:'queue-log',logDef:'First In First Out — join the back, served from the front.',
    callout:'<strong>Used in:</strong> BFS graph traversal, print job scheduling, anything where order of arrival matters.',
-   defaultCode:()=>CODES.queue.enqueue('Eve'),
-   defaultJavaCode:()=>JAVA_CODES.queue.enqueue('Eve'),
+   methodsHtml:`<div class="methods-panel">
+      <div class="methods-header">Java methods</div>
+      <div class="methods-grid">
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">offer</span>(<span class="mp">E element</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Adds element to the back of the queue. Returns false instead of throwing on failure.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">poll</span>(<span class="mp"></span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Removes and returns the front element. Returns null if queue is empty.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">peek</span>(<span class="mp"></span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Returns the front element without removing it. Returns null if empty.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">remove</span>(<span class="mp"></span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Removes and returns front element. Throws NoSuchElementException if empty.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">element</span>(<span class="mp"></span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Returns front element without removing. Throws exception if empty (unlike peek).</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">isEmpty</span>(<span class="mp"></span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Returns true if the queue has no elements.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">size</span>(<span class="mp"></span>) → <span class="mr">int</span></div>
+        <div class="method-desc">Returns the number of elements currently in the queue.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      </div>
+    </div>`,
    init:()=>qDraw()},
 
   {id:'deq',label:'Deque',icon:'🚂',accent:'#f06050',
@@ -1020,8 +912,51 @@ const SECTIONS=[
      <div class="csep"></div><button class="cb" onclick="deqReset()">Reset</button>`,
    canvas:'deq-c',ch:190,log:'deq-log',logDef:'Double-ended queue. Insert and remove from either end freely.',
    callout:'<strong>Generalizes both:</strong> a deque behaves as a stack (use front only) or a queue (add back, remove front) depending on how you use it.',
-   defaultCode:()=>CODES.deq.pushBack(99),
-   defaultJavaCode:()=>JAVA_CODES.deq.pushBack(99),
+   methodsHtml:`<div class="methods-panel">
+      <div class="methods-header">Java methods</div>
+      <div class="methods-grid">
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">addFirst</span>(<span class="mp">E element</span>) → <span class="mr">void</span></div>
+        <div class="method-desc">Inserts element at the front. Equivalent to a stack push on the left end.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">addLast</span>(<span class="mp">E element</span>) → <span class="mr">void</span></div>
+        <div class="method-desc">Inserts element at the back. Equivalent to a queue enqueue.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">removeFirst</span>(<span class="mp"></span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Removes and returns the front element. Throws if empty.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">removeLast</span>(<span class="mp"></span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Removes and returns the back element. Throws if empty.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">peekFirst</span>(<span class="mp"></span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Returns front element without removing. Returns null if empty.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">peekLast</span>(<span class="mp"></span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Returns back element without removing. Returns null if empty.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">offerFirst</span>(<span class="mp">E element</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Inserts at front, returns false instead of throwing on failure.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">offerLast</span>(<span class="mp">E element</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Inserts at back, returns false instead of throwing on failure.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      </div>
+    </div>`,
    init:()=>deqDraw()},
 
   {id:'bag',label:'Bag',icon:'👜',accent:'#e8d050',
@@ -1034,8 +969,41 @@ const SECTIONS=[
      <div class="csep"></div><button class="cb" onclick="bagReset()">Reset</button>`,
    canvas:'bag-c',ch:240,log:'bag-log',logDef:'No order, no index, duplicates fine. Like reaching into a bag.',
    callout:'<strong>Notice:</strong> there are three 7s in the bag. A Set would reject duplicates; a Bag welcomes them.',
-   defaultCode:()=>CODES.bag.add(7),
-   defaultJavaCode:()=>JAVA_CODES.bag.add(7),
+   methodsHtml:`<div class="methods-panel">
+      <div class="methods-header">Java methods</div>
+      <div class="methods-grid">
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">add</span>(<span class="mp">E element</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Adds element to the bag. Order is not guaranteed. Duplicates are allowed.</div>
+        <div class="method-badge o1">O(1) amortized</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">remove</span>(<span class="mp">Object o</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Removes the first occurrence of the element. Returns true if found.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">contains</span>(<span class="mp">Object o</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Returns true if the bag contains the element. Must scan all items.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">size</span>(<span class="mp"></span>) → <span class="mr">int</span></div>
+        <div class="method-desc">Returns total number of elements including duplicates.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">isEmpty</span>(<span class="mp"></span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Returns true if the bag contains no elements.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">iterator</span>(<span class="mp"></span>) → <span class="mr">Iterator&lt;E&gt;</span></div>
+        <div class="method-desc">Returns an iterator so you can loop through all items in unspecified order.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      </div>
+    </div>`,
    init:()=>bagDraw()},
 
   {id:'set',label:'Set',icon:'⭕',accent:'#5ec460',
@@ -1048,8 +1016,51 @@ const SECTIONS=[
      <div class="csep"></div><button class="cb" onclick="setReset()">Reset</button>`,
    canvas:'set-c',ch:230,log:'set-log',logDef:'Try adding a duplicate — the set will reject it.',
    callout:'<strong>Key operation:</strong> "is X in this set?" runs in O(1) average with a hash table, or O(log n) with a BST. Much faster than scanning a list.',
-   defaultCode:()=>CODES.set.add(7),
-   defaultJavaCode:()=>JAVA_CODES.set.add(7),
+   methodsHtml:`<div class="methods-panel">
+      <div class="methods-header">Java methods</div>
+      <div class="methods-grid">
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">add</span>(<span class="mp">E element</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Adds element if not already present. Returns false if it was a duplicate — no exception thrown.</div>
+        <div class="method-badge o1">O(1) avg</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">remove</span>(<span class="mp">Object o</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Removes element if present. Returns false if not found.</div>
+        <div class="method-badge o1">O(1) avg</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">contains</span>(<span class="mp">Object o</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Returns true if element exists in set. Much faster than scanning a list.</div>
+        <div class="method-badge o1">O(1) avg</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">size</span>(<span class="mp"></span>) → <span class="mr">int</span></div>
+        <div class="method-desc">Returns number of distinct elements in the set.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">isEmpty</span>(<span class="mp"></span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Returns true if the set has no elements.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">addAll</span>(<span class="mp">Collection c</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Adds all elements from a collection — duplicates silently ignored. Useful for union.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">retainAll</span>(<span class="mp">Collection c</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Keeps only elements also in c. Computes intersection.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">removeAll</span>(<span class="mp">Collection c</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Removes all elements also in c. Computes difference.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      </div>
+    </div>`,
    init:()=>setDraw()},
 
   {id:'pq',label:'Priority Queue',icon:'🏥',accent:'#f07ab0',
@@ -1063,8 +1074,51 @@ const SECTIONS=[
      <div class="csep"></div><button class="cb" onclick="pqReset()">Reset</button>`,
    canvas:'pq-c',ch:250,log:'pq-log',logDef:'Highest priority is always seen first — regardless of arrival order.',
    callout:'<strong>Backed by a heap:</strong> the heap\'s rule (parent ≥ children) guarantees the highest-priority item is always at the root — O(1) to peek, O(log n) to insert or remove.',
-   defaultCode:()=>CODES.pq.enqueue('Frank',7),
-   defaultJavaCode:()=>JAVA_CODES.pq.enqueue('Frank',7),
+   methodsHtml:`<div class="methods-panel">
+      <div class="methods-header">Java methods</div>
+      <div class="methods-grid">
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">offer</span>(<span class="mp">E element</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Inserts element and re-sorts by priority. The heap bubbles it up to the right position.</div>
+        <div class="method-badge on">O(log n)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">poll</span>(<span class="mp"></span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Removes and returns the highest priority element. Returns null if empty.</div>
+        <div class="method-badge on">O(log n)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">peek</span>(<span class="mp"></span>) → <span class="mr">E</span></div>
+        <div class="method-desc">Returns highest priority element without removing it. The root of the heap.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">remove</span>(<span class="mp">Object o</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Removes a specific element regardless of priority. Slower — must find it first.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">contains</span>(<span class="mp">Object o</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Returns true if the element exists anywhere in the queue.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">size</span>(<span class="mp"></span>) → <span class="mr">int</span></div>
+        <div class="method-desc">Returns number of elements currently in the priority queue.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">isEmpty</span>(<span class="mp"></span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Returns true if no elements are waiting.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">clear</span>(<span class="mp"></span>) → <span class="mr">void</span></div>
+        <div class="method-desc">Removes all elements from the priority queue.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      </div>
+    </div>`,
    init:()=>pqDraw()},
 
   {id:'dict',label:'Dictionary',icon:'🗄️',accent:'#4f8ef7',
@@ -1079,8 +1133,61 @@ const SECTIONS=[
      <div class="csep"></div><button class="cb" onclick="dictReset()">Reset</button>`,
    canvas:'dict-c',ch:230,log:'dict-log',logDef:'Key-value pairs. Look up any value instantly via its key.',
    callout:'<strong>The key insight:</strong> a dictionary doesn\'t search through values to find one — it uses the key as a direct address (via hashing). That\'s why lookup is O(1) average.',
-   defaultCode:()=>CODES.dict.get('name'),
-   defaultJavaCode:()=>JAVA_CODES.dict.get('name'),
+   methodsHtml:`<div class="methods-panel">
+      <div class="methods-header">Java methods</div>
+      <div class="methods-grid">
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">put</span>(<span class="mp">K key, V value</span>) → <span class="mr">V</span></div>
+        <div class="method-desc">Inserts or updates a key-value pair. Returns the previous value, or null if key was new.</div>
+        <div class="method-badge o1">O(1) avg</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">get</span>(<span class="mp">Object key</span>) → <span class="mr">V</span></div>
+        <div class="method-desc">Returns the value for the key, or null if the key does not exist.</div>
+        <div class="method-badge o1">O(1) avg</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">remove</span>(<span class="mp">Object key</span>) → <span class="mr">V</span></div>
+        <div class="method-desc">Removes and returns the value for the key. Returns null if not found.</div>
+        <div class="method-badge o1">O(1) avg</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">containsKey</span>(<span class="mp">Object key</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Returns true if the key exists. Does not check values.</div>
+        <div class="method-badge o1">O(1) avg</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">containsValue</span>(<span class="mp">Object value</span>) → <span class="mr">boolean</span></div>
+        <div class="method-desc">Returns true if any key maps to this value. Must scan all entries.</div>
+        <div class="method-badge on">O(n)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">getOrDefault</span>(<span class="mp">Object key, V default</span>) → <span class="mr">V</span></div>
+        <div class="method-desc">Returns value for key, or the default if key not found. Avoids null checks.</div>
+        <div class="method-badge o1">O(1) avg</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">putIfAbsent</span>(<span class="mp">K key, V value</span>) → <span class="mr">V</span></div>
+        <div class="method-desc">Inserts only if the key is not already present. Useful for safe initialization.</div>
+        <div class="method-badge o1">O(1) avg</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">keySet</span>(<span class="mp"></span>) → <span class="mr">Set&lt;K&gt;</span></div>
+        <div class="method-desc">Returns a Set view of all keys in the map.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">values</span>(<span class="mp"></span>) → <span class="mr">Collection&lt;V&gt;</span></div>
+        <div class="method-desc">Returns a Collection of all values. May contain duplicates.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      <div class="method-row">
+        <div class="method-sig"><span class="mn">entrySet</span>(<span class="mp"></span>) → <span class="mr">Set&lt;Map.Entry&lt;K,V&gt;&gt;</span></div>
+        <div class="method-desc">Returns all key-value pairs. The standard way to loop through the whole map.</div>
+        <div class="method-badge o1">O(1)</div>
+      </div>
+      </div>
+    </div>`,
    init:()=>dictDraw()},
 ];
 
@@ -1091,7 +1198,7 @@ function switchTo(id){
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.id===id));
   document.querySelectorAll('.panel').forEach(el=>el.classList.toggle('active',el.id==='p-'+id));
   const s=SECTIONS.find(x=>x.id===id);
-  if(s)setTimeout(()=>{s.init();setLog(s.log,s.logDef);if(s.defaultCode)setCodeBoth(s.id,s.defaultCode,s.defaultJavaCode||s.defaultCode);},30);
+  if(s)setTimeout(()=>{s.init();setLog(s.log,s.logDef);},30);
   // update accent
   document.documentElement.style.setProperty('--accent',s?.accent||'#4f8ef7');
 }
@@ -1122,20 +1229,13 @@ SECTIONS.forEach(s=>{
     <div class="scene" id="${s.id}-scene"><canvas id="${s.canvas}"></canvas></div>
     <div class="log" id="${s.log}">${s.logDef}</div>
     <div class="callout">${s.callout}</div>
-    <div class="code-block">
-      <div class="code-header"><span>python</span><button class="code-copy" id="${s.id}-copy" onclick="copyCode('${s.id}','py')">copy</button></div>
-      <pre class="code-pre" id="${s.id}-code-pre"><span class="tok-cmt"># perform an action above to see the code</span></pre>
-    </div>
-    <div class="code-block" style="margin-top:8px">
-      <div class="code-header"><span>java</span><button class="code-copy" id="${s.id}-java-copy" onclick="copyCode('${s.id}','java')">copy</button></div>
-      <pre class="code-pre" id="${s.id}-java-pre"><span class="tok-cmt">// perform an action above to see the code</span></pre>
-    </div>`;
+    <div id="${s.id}-methods">${s.methodsHtml||''}</div>`;
   panelsEl.appendChild(p);
 });
 
 window.addEventListener('load',()=>{
   const s=SECTIONS.find(x=>x.id===current);
-  if(s){document.documentElement.style.setProperty('--accent',s.accent);s.init();setLog(s.log,s.logDef);if(s.defaultCode)setCodeBoth(s.id,s.defaultCode,s.defaultJavaCode||s.defaultCode);}
+  if(s){document.documentElement.style.setProperty('--accent',s.accent);s.init();setLog(s.log,s.logDef);}
 });
 window.addEventListener('resize',()=>{
   const s=SECTIONS.find(x=>x.id===current);if(s)s.init();
